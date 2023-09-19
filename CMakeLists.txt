@@ -5,7 +5,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
-add_executable(Motor src/main.cpp glad/src/glad.c)
+FILE(GLOB_RECURSE sources src/*.cpp)
+
+add_executable(Motor ${sources} glad/src/glad.c)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
