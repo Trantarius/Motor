@@ -1,6 +1,8 @@
 #include <iostream>
 #include <stdexcept>
-#include "main.h"
+#include "main.hpp"
+#include "util/vec.hpp"
+#include "util/mat.hpp"
 
 GLFWwindow* window=nullptr;
 bool shouldQuit=false;
@@ -9,10 +11,17 @@ struct InitFailedError : std::runtime_error{
   InitFailedError(std::string what):std::runtime_error(what){}
 };
 
+void windowResizeCallback(GLFWwindow* window, int width, int height){
+  glViewport(0,0,width,height);
+}
+
 void init(){
   if(!glfwInit()){
     throw InitFailedError("glfwInit failed");
   }
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   window=glfwCreateWindow(640,480,"Hello",NULL,NULL);
   if(!window){
@@ -27,6 +36,8 @@ void init(){
     glfwTerminate();
     throw InitFailedError("Failed to initialize GLAD");
   }
+
+  glfwSetFramebufferSizeCallback(window,windowResizeCallback);
 }
 
 void mainLoop(){
@@ -52,9 +63,22 @@ void terminate(){
   glfwTerminate();
 }
 
+struct foo{
+  foo(std::initializer_list<int> li){}
+};
+
 int main(){
   init();
 
+  fvec3 av;
+  fvec3 fv{1,2,3};
+  dvec3 fv2{4,5,6};
+  print(fv+fv2);
+  print(av);
+
+  foo myfoo{1,2,3,4};
+  mat<float,2> mymat=mat<float,2>::identity();
+  print(mymat);
   while (!shouldQuit){
     mainLoop();
   }
