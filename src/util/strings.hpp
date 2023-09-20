@@ -31,7 +31,6 @@ template <> inline string tostr(bool b){
   return b?"true":"false";
 }
 
-
 #define STD(type) \
 template <> inline string tostr(type a){ \
   return std::to_string(a); \

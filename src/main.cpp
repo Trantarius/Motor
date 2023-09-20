@@ -1,8 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 #include "main.hpp"
-#include "util/vec.hpp"
-#include "util/mat.hpp"
+#include "util/glm.hpp"
 
 GLFWwindow* window=nullptr;
 bool shouldQuit=false;
@@ -70,14 +69,14 @@ struct foo{
 int main(){
   init();
 
-  fvec3 av;
-  fvec3 fv{1,2,3};
-  dvec3 fv2{4,5,6};
+  glm::vec3 av;
+  glm::vec3 fv{1,2,3};
+  glm::vec3 fv2{4,5,6};
   print(fv+fv2);
   print(av);
 
   foo myfoo{1,2,3,4};
-  mat<float,2> mymat=mat<float,2>::identity();
+  glm::mat2 mymat=glm::mat2();
   print(mymat);
   while (!shouldQuit){
     mainLoop();
