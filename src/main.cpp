@@ -2,6 +2,8 @@
 #include <stdexcept>
 #include "main.hpp"
 #include "util/glm.hpp"
+#include "Render.hpp"
+#include "Mesh.hpp"
 
 GLFWwindow* window=nullptr;
 bool shouldQuit=false;
@@ -18,8 +20,8 @@ void init(){
   if(!glfwInit()){
     throw InitFailedError("glfwInit failed");
   }
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   window=glfwCreateWindow(640,480,"Hello",NULL,NULL);
@@ -40,13 +42,11 @@ void init(){
 }
 
 void mainLoop(){
-  /* Render here */
   glClear(GL_COLOR_BUFFER_BIT);
 
-  /* Swap front and back buffers */
-  glfwSwapBuffers(window);
+  renderAll();
 
-  /* Poll for and process events */
+  glfwSwapBuffers(window);
   glfwPollEvents();
 
   if(glfwWindowShouldClose(window)){
@@ -69,15 +69,19 @@ struct foo{
 int main(){
   init();
 
-  glm::vec3 av;
-  glm::vec3 fv{1,2,3};
-  glm::vec3 fv2{4,5,6};
-  print(fv+fv2);
-  print(av);
+  Shader shader("src/shaders/pass.v.glsl","src/shaders/color.f.glsl");
+  shader.setUniform("color",vec4(1,1,1,1));
+  vec3 verts[]{
+    vec3(-0.5,-0.5,0),
+    vec3(0,0.5,0),
+    vec3(0.5,-0.5,0)
+  };
+  MeshData triangle(Bloc<vec3>(verts,3));
 
-  foo myfoo{1,2,3,4};
-  glm::mat2 mymat=glm::mat2();
-  print(mymat);
+  Mesh mesh;
+  mesh.mesh_data=triangle;
+  mesh.shader=shader;
+
   while (!shouldQuit){
     mainLoop();
   }
