@@ -26,6 +26,8 @@ public:
 
   void draw(uint mode) const;
   bool is_null() const;
+
+  static MeshData readOBJ(string path);
 };
 
 class Mesh : Renderable{

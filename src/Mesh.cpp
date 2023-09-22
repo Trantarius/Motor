@@ -1,7 +1,8 @@
 #include "Mesh.hpp"
 #include "main.hpp"
-
-
+#include "util/io.hpp"
+#include <fstream>
+#include <map>
 
 
 MeshData::MeshData(Bloc<vec3> verts){
@@ -157,6 +158,148 @@ bool MeshData::is_null() const {
 void Mesh::render(){
   if(!shader.is_null() && !mesh_data.is_null()){
     shader.use();
+    shader.setUniform("model",(mat4)this->transform);
+    shader.setUniform("view",(mat4)inverse(renderer->camera.transform));
+    shader.setUniform("projection",(mat4)renderer->camera.projection);
     mesh_data.draw(GL_TRIANGLES);
   }
+}
+
+
+
+
+
+
+Array<string> splitString(string str,char delim){
+  Array<string> ret;
+  string acc;
+  for(char c : str){
+    if(c==delim){
+      if(acc!=""){
+        ret.push_back(acc);
+      }
+      acc="";
+    }else{
+      acc.push_back(c);
+    }
+  }
+  if(acc!=""){
+    ret.push_back(acc);
+  }
+  return ret;
+}
+
+MeshData MeshData::readOBJ(string path){
+  std::ifstream file(path);
+
+  Array<vec3> verts;
+  Array<vec2> uvs;
+  Array<vec3> norms;
+  Array<vec3> colors;
+  Array<Array<string>> faces;
+
+  string line;
+  while(true){
+    line="";
+    getline(file,line);
+    if(line==""){
+      break;
+    }
+
+    Array<string> words=splitString(line,' ');
+
+    if(words[0]=="v"){
+      if(words.size()>=4){
+        verts.push_back(vec3(stof(words[1]),stof(words[2]),stof(words[3])));
+        if(words.size()==7){
+          colors.push_back(vec3(stof(words[4]),stof(words[5]),stof(words[6])));
+        }
+      }
+    }
+    else if(words[0]=="vt"){
+      if(words.size()>=3){
+        uvs.push_back(vec2(stof(words[1]),stof(words[2])));
+      }
+    }
+    else if(words[0]=="vn"){
+      if(words.size()>=4){
+        norms.push_back(vec3(stof(words[1]),stof(words[2]),stof(words[3])));
+      }
+    }
+    else if(words[0]=="f"){
+      Array<string> fv;
+      for(int w=1;w<words.size();w++){
+        fv.push_back(words[w]);
+      }
+      faces.push_back(fv);
+    }
+  }
+
+  Map<string,int> vertmap;
+  for(Array<string>& arr : faces){
+    for(string iv : arr){
+      vertmap[iv]=-1;
+    }
+  }
+
+  Array<float> vertbuffer;
+  int idx=0;
+  for(std::pair<string,int> pr : vertmap){
+    vertmap[pr.first]=idx++;
+
+    string word=pr.first;
+    int sep1=word.find_first_of('/');
+    int sep2=word.find_last_of('/');
+
+    int vidx=stoi(word.substr(0,sep1));
+    vertbuffer.push_back(verts[vidx].x);
+    vertbuffer.push_back(verts[vidx].y);
+    vertbuffer.push_back(verts[vidx].z);
+
+    if(!uvs.empty()){
+      int uvidx=stoi(word.substr(sep1+1,sep2-sep1-1));
+      vertbuffer.push_back(uvs[uvidx].x);
+      vertbuffer.push_back(uvs[uvidx].y);
+    }
+
+    if(!norms.empty()){
+      int normidx=stoi(word.substr(sep2+1));
+      vertbuffer.push_back(norms[normidx].x);
+      vertbuffer.push_back(norms[normidx].y);
+      vertbuffer.push_back(norms[normidx].z);
+    }
+
+    if(!colors.empty()){
+      vertbuffer.push_back(colors[vidx].x);
+      vertbuffer.push_back(colors[vidx].y);
+      vertbuffer.push_back(colors[vidx].z);
+    }
+  }
+
+  Array<uint> elembuffer;
+  for(Array<string>& face : faces){
+    for(string vid : face){
+      elembuffer.push_back(vertmap[vid]);
+    }
+  }
+
+  Array<uint> attribs;
+  attribs.push_back(3);
+  if(!uvs.empty()){
+    attribs.push_back(2);
+  }
+  if(!norms.empty()){
+    attribs.push_back(3);
+  }
+  if(!colors.empty()){
+    attribs.push_back(3);
+  }
+
+  MeshData md=MeshData(Bloc<float>(
+    vertbuffer.data(),vertbuffer.size()),
+    Bloc<uint>(attribs.data(),attribs.size()),
+    Bloc<uint>(elembuffer.data(),elembuffer.size())
+  );
+
+  return md;
 }

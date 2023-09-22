@@ -13,7 +13,7 @@ struct Bloc{
   size_t size=0;
 
   Bloc(){}
-  Bloc(size_t size):ptr(new T[size]),size(size){}
+  Bloc(size_t size):ptr(new T[size]{}),size(size){}
   Bloc(T* ptr, size_t size):ptr(ptr),size(size){}
   Bloc(Bloc& b):ptr(b.ptr),size(b.size){}
 

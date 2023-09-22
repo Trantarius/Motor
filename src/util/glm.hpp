@@ -58,34 +58,45 @@ template <> inline string tostr(bvec4 v){
 
 
 
+inline string strWidth(string s){
+  s.resize(6,' ');
+  return s;
+}
+
 template <> inline string tostr(mat2 m){
-  return string("[[")+tostr(m[0][0])+", "+tostr(m[0][1])+"]]\n"+
-         string("[[")+tostr(m[1][0])+", "+tostr(m[1][1])+"]]\n";
+  m=transpose(m);
+  return string("[[")+strWidth(tostr(m[0][0]))+", "+strWidth(tostr(m[0][1]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[1][0]))+", "+strWidth(tostr(m[1][1]))+"]]\n";
 }
 template <> inline string tostr(mat3 m){
-  return string("[[")+tostr(m[0][0])+", "+tostr(m[0][1])+", "+tostr(m[0][2])+"]]\n"+
-         string("[[")+tostr(m[1][0])+", "+tostr(m[1][1])+", "+tostr(m[1][2])+"]]\n"+
-         string("[[")+tostr(m[2][0])+", "+tostr(m[2][1])+", "+tostr(m[2][2])+"]]\n";
+  m=transpose(m);
+  return string("[[")+strWidth(tostr(m[0][0]))+", "+strWidth(tostr(m[0][1]))+", "+strWidth(tostr(m[0][2]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[1][0]))+", "+strWidth(tostr(m[1][1]))+", "+strWidth(tostr(m[1][2]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[2][0]))+", "+strWidth(tostr(m[2][1]))+", "+strWidth(tostr(m[2][2]))+"]]\n";
 }
 template <> inline string tostr(mat4 m){
-  return string("[[")+tostr(m[0][0])+", "+tostr(m[0][1])+", "+tostr(m[0][2])+", "+tostr(m[0][3])+"]]\n"+
-         string("[[")+tostr(m[1][0])+", "+tostr(m[1][1])+", "+tostr(m[1][2])+", "+tostr(m[1][3])+"]]\n"+
-         string("[[")+tostr(m[2][0])+", "+tostr(m[2][1])+", "+tostr(m[2][2])+", "+tostr(m[2][3])+"]]\n"+
-         string("[[")+tostr(m[3][0])+", "+tostr(m[3][1])+", "+tostr(m[3][2])+", "+tostr(m[3][3])+"]]\n";
+  m=transpose(m);
+  return string("[[")+strWidth(tostr(m[0][0]))+", "+strWidth(tostr(m[0][1]))+", "+strWidth(tostr(m[0][2]))+", "+strWidth(tostr(m[0][3]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[1][0]))+", "+strWidth(tostr(m[1][1]))+", "+strWidth(tostr(m[1][2]))+", "+strWidth(tostr(m[1][3]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[2][0]))+", "+strWidth(tostr(m[2][1]))+", "+strWidth(tostr(m[2][2]))+", "+strWidth(tostr(m[2][3]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[3][0]))+", "+strWidth(tostr(m[3][1]))+", "+strWidth(tostr(m[3][2]))+", "+strWidth(tostr(m[3][3]))+"]]\n";
 }
 
 template <> inline string tostr(dmat2 m){
-  return string("[[")+tostr(m[0][0])+", "+tostr(m[0][1])+"]]\n"+
-         string("[[")+tostr(m[1][0])+", "+tostr(m[1][1])+"]]\n";
+  m=transpose(m);
+  return string("[[")+strWidth(tostr(m[0][0]))+", "+strWidth(tostr(m[0][1]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[1][0]))+", "+strWidth(tostr(m[1][1]))+"]]\n";
 }
 template <> inline string tostr(dmat3 m){
-  return string("[[")+tostr(m[0][0])+", "+tostr(m[0][1])+", "+tostr(m[0][2])+"]]\n"+
-         string("[[")+tostr(m[1][0])+", "+tostr(m[1][1])+", "+tostr(m[1][2])+"]]\n"+
-         string("[[")+tostr(m[2][0])+", "+tostr(m[2][1])+", "+tostr(m[2][2])+"]]\n";
+  m=transpose(m);
+  return string("[[")+strWidth(tostr(m[0][0]))+", "+strWidth(tostr(m[0][1]))+", "+strWidth(tostr(m[0][2]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[1][0]))+", "+strWidth(tostr(m[1][1]))+", "+strWidth(tostr(m[1][2]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[2][0]))+", "+strWidth(tostr(m[2][1]))+", "+strWidth(tostr(m[2][2]))+"]]\n";
 }
 template <> inline string tostr(dmat4 m){
-  return string("[[")+tostr(m[0][0])+", "+tostr(m[0][1])+", "+tostr(m[0][2])+", "+tostr(m[0][3])+"]]\n"+
-         string("[[")+tostr(m[1][0])+", "+tostr(m[1][1])+", "+tostr(m[1][2])+", "+tostr(m[1][3])+"]]\n"+
-         string("[[")+tostr(m[2][0])+", "+tostr(m[2][1])+", "+tostr(m[2][2])+", "+tostr(m[2][3])+"]]\n"+
-         string("[[")+tostr(m[3][0])+", "+tostr(m[3][1])+", "+tostr(m[3][2])+", "+tostr(m[3][3])+"]]\n";
+  m=transpose(m);
+  return string("[[")+strWidth(tostr(m[0][0]))+", "+strWidth(tostr(m[0][1]))+", "+strWidth(tostr(m[0][2]))+", "+strWidth(tostr(m[0][3]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[1][0]))+", "+strWidth(tostr(m[1][1]))+", "+strWidth(tostr(m[1][2]))+", "+strWidth(tostr(m[1][3]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[2][0]))+", "+strWidth(tostr(m[2][1]))+", "+strWidth(tostr(m[2][2]))+", "+strWidth(tostr(m[2][3]))+"]]\n"+
+         string("[[")+strWidth(tostr(m[3][0]))+", "+strWidth(tostr(m[3][1]))+", "+strWidth(tostr(m[3][2]))+", "+strWidth(tostr(m[3][3]))+"]]\n";
 }

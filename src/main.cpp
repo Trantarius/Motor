@@ -4,6 +4,7 @@
 #include "util/glm.hpp"
 #include "Render.hpp"
 #include "Mesh.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 GLFWwindow* window=nullptr;
 bool shouldQuit=false;
@@ -44,7 +45,7 @@ void init(){
 void mainLoop(){
   glClear(GL_COLOR_BUFFER_BIT);
 
-  renderAll();
+  Render::main.render();
 
   glfwSwapBuffers(window);
   glfwPollEvents();
@@ -65,22 +66,17 @@ void terminate(){
 struct foo{
   foo(std::initializer_list<int> li){}
 };
-
+Render myrend;
 int main(){
   init();
 
-  Shader shader("src/shaders/pass.v.glsl","src/shaders/color.f.glsl");
-  shader.setUniform("color",vec4(1,1,1,1));
-  vec3 verts[]{
-    vec3(-0.5,-0.5,0),
-    vec3(0,0.5,0),
-    vec3(0.5,-0.5,0)
-  };
-  MeshData triangle(Bloc<vec3>(verts,3));
+  Shader shader("src/shaders/mesh.v.glsl","src/shaders/normals.f.glsl");
+  MeshData suzanne = MeshData::readOBJ("suzanne.obj");
 
   Mesh mesh;
-  mesh.mesh_data=triangle;
+  mesh.mesh_data=suzanne;
   mesh.shader=shader;
+
 
   while (!shouldQuit){
     mainLoop();

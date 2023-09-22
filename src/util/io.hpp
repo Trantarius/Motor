@@ -15,7 +15,7 @@ inline Bloc<char> readfile(string path){
   size_t len=ftell(file);
   rewind(file);
 
-  Bloc<char> ret(len);
+  Bloc<char> ret(len+1);
   size_t count=fread(ret,1,len,file);
   fclose(file);
   if(count!=len){

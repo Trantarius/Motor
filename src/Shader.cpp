@@ -10,6 +10,7 @@ Shader::Shader(string vertex_shader_file,string fragment_shader_file){
   uint vertex_shader=glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertex_shader,1,&vertex_source.ptr,NULL);
   glCompileShader(vertex_shader);
+  vertex_source.destroy();
   // check for shader compile errors
   int success;
   char infoLog[512];
@@ -27,6 +28,7 @@ Shader::Shader(string vertex_shader_file,string fragment_shader_file){
   uint fragment_shader=glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(fragment_shader,1,&fragment_source.ptr,NULL);
   glCompileShader(fragment_shader);
+  fragment_source.destroy();
   // check for shader compile errors
   glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
   if (!success)
