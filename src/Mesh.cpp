@@ -4,7 +4,6 @@
 #include "util/gl_enum_names.hpp"
 #include <map>
 
-
 MeshData::MeshData(Bloc<vec3> verts){
   assert(verts.size%3==0);
   info=new Info();
@@ -160,8 +159,8 @@ void Mesh::render(){
   if(!shader.is_null() && !mesh_data.is_null()){
     shader.use();
     shader.setUniform("model",getTransform());
-    shader.setUniform("view",renderer->getView());
-    shader.setUniform("projection",renderer->getProjection());
+    shader.setUniform("view",Render::current().getView());
+    shader.setUniform("projection",Render::current().getProjection());
     mesh_data.draw(GL_TRIANGLES);
   }
 }

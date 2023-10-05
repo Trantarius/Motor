@@ -31,7 +31,7 @@ public:
   static MeshData readOBJ(string path);
 };
 
-class Mesh : public Renderable{
+class Mesh : public Renderable, public Spatial{
   void render() override;
 public:
   MeshData mesh_data;

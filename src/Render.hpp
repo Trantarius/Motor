@@ -3,9 +3,10 @@
 #include "util/glm.hpp"
 #include "util/funcy.hpp"
 #include "Spatial.hpp"
-#include <memory>
+#include "util/mem.hpp"
 
 class Render;
+class Window;
 
 struct Camera : public Spatial{
   Render* renderer=nullptr;
@@ -26,38 +27,54 @@ struct OrthographicCamera : public Camera{
   mat4 getProjection() override;
 };
 
-class Render{
-
-  mat4 current_projection;
-  mat4 current_view;
-
-public:
-  static Render main;
-
-  ivec2 size=ivec2(800,600);
-  std::unique_ptr<Camera> camera;
-  List<Call> render_calls;
-  void render();
-
-  mat4 getProjection(){return current_projection;}
-  mat4 getView(){return current_view;}
-};
-
-class Renderable : public Spatial{
-  List<Call>::iterator renderables_pos;
+class Renderable : public MemSafe{
 protected:
   virtual void render()=0;
 public:
-  Render* renderer=&Render::main;
-
-  Renderable(){
-    renderer->render_calls.push_back(MemFunc(this,render));
-    renderables_pos=--renderer->render_calls.end();
-  }
-  ~Renderable(){
-    renderer->render_calls.erase(renderables_pos);
-  }
   friend class Render;
 };
 
 
+class Render{
+
+  mat4 current_projection;
+  mat4 current_view;
+  uvec2 size=uvec2(1024,576);
+
+protected:
+  static Render* _current;
+  List<SafePtr<Renderable>> render_calls;
+
+public:
+
+  Unique<Camera> camera;
+
+  virtual void pre_render()=0;
+  virtual void post_render()=0;
+
+  void render();
+
+  mat4 getProjection(){return current_projection;}
+  mat4 getView(){return current_view;}
+  static Render& current(){assert(_current!=nullptr);return *_current;}
+
+  virtual void setSize(uvec2 to){size=to;}
+  virtual uvec2 getSize() const {return size;}
+
+  void add(Renderable* rable);
+  void remove(Renderable* rable);
+};
+
+class WindowRender : public Render{
+  Window& window;
+public:
+  WindowRender(Window& win):window(win){}
+
+  virtual void pre_render() override;
+  virtual void post_render() override;
+
+  virtual void setSize(uvec2 to) override;
+  virtual uvec2 getSize() const  override;
+
+  Window& get_window() const{return window;}
+};

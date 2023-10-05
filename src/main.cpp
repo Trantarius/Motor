@@ -6,18 +6,17 @@
 #include "Mesh.hpp"
 #include "util/gl_enum_names.hpp"
 #include <glm/ext.hpp>
+#include "Input.hpp"
+#include "Window.hpp"
 
-GLFWwindow* window=nullptr;
+Window* Main::window=nullptr;
+Render* Main::render=nullptr;
+Input* Main::input=nullptr;
 bool shouldQuit=false;
 
 struct InitFailedError : std::runtime_error{
   InitFailedError(std::string what):std::runtime_error(what){}
 };
-
-void windowResizeCallback(GLFWwindow* window, int width, int height){
-  glViewport(0,0,width,height);
-  Render::main.size=ivec2(width,height);
-}
 
 void openGLDebugCallback(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar* message, const void* userparam){
   if(severity==GL_DEBUG_SEVERITY_NOTIFICATION){
@@ -35,18 +34,12 @@ void init(){
   if(!glfwInit()){
     throw InitFailedError("glfwInit failed");
   }
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-  window=glfwCreateWindow(Render::main.size.x,Render::main.size.y,"Hello",NULL,NULL);
-  if(!window){
-    glfwTerminate();
-    throw InitFailedError("glfwCreateWindow failed");
-  }
+  Main::window=new Window();
+  Main::input=&Main::window->input;
+  Main::render=&Main::window->render;
 
-  glfwMakeContextCurrent(window);
+  glfwMakeContextCurrent(Main::window->glfw());
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
   {
@@ -54,22 +47,18 @@ void init(){
     throw InitFailedError("Failed to initialize GLAD");
   }
 
-  glfwSetFramebufferSizeCallback(window,windowResizeCallback);
   glDebugMessageCallback(openGLDebugCallback,NULL);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 }
 
 void mainLoop(){
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  Render::main.render();
-
-  glfwSwapBuffers(window);
-  glfwPollEvents();
-
-  if(glfwWindowShouldClose(window)){
-    quit();
+  while(!shouldQuit){
+    glfwPollEvents();
+    Main::render->render();
+    if(glfwWindowShouldClose(Main::window->glfw())){
+      quit();
+    }
   }
 }
 
@@ -81,15 +70,11 @@ void terminate(){
   glfwTerminate();
 }
 
-struct foo{
-  foo(std::initializer_list<int> li){}
-};
-Render myrend;
 int main(){
   init();
 
-  Render::main.camera=std::unique_ptr<Camera>( new PerspectiveCamera());
-  Render::main.camera->renderer=&Render::main;
+  Main::render->camera=Unique<Camera>( new PerspectiveCamera());
+  Main::render->camera->renderer=Main::render;
 
   Shader shader("src/shaders/mesh.vert","src/shaders/normals.frag");
   MeshData suzanne = MeshData::readOBJ("suzanne.obj");
@@ -99,11 +84,10 @@ int main(){
   mesh.mesh_data=suzanne;
   mesh.shader=shader;
   mesh.position.z-=5;
+  Main::render->add(&mesh);
 
 
-  while (!shouldQuit){
-    mainLoop();
-  }
+  mainLoop();
 
   terminate();
   return 0;

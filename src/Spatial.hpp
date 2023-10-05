@@ -1,6 +1,5 @@
 #pragma once
 #include "util/glm.hpp"
-
 struct Spatial{
   vec3 scale{1,1,1};
   mat3 rotation{1};

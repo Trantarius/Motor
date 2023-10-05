@@ -4,4 +4,12 @@
 
 void quit();
 
-GLFWwindow* mainWindow();
+class Input;
+class Render;
+class Window;
+
+struct Main{
+  static Input* input;
+  static Render* render;
+  static Window* window;
+};
