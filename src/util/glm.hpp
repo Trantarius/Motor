@@ -6,6 +6,7 @@
 
 using namespace glm;
 
+constexpr double PI=3.1415926535897932384626433832795028841971693993751058;
 
 template <> inline string tostr(vec2 v){
   return string("[")+tostr(v.x)+", "+tostr(v.y)+"]";

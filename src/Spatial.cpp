@@ -1,48 +1,28 @@
 #include "Spatial.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
- void Spatial::translate(dvec3 by){
-  transform=glm::translate(transform,by);
+mat4 Spatial::getTransform() const{
+  mat3 mat(
+    scale.x,0,0,
+    0,scale.y,0,
+    0,0,scale.z
+  );
+  mat=rotation*mat;
+
+  mat4 tf=mat4(mat);
+  tf[3]+=vec4(position,0);
+  return tf;
 }
 
- void Spatial::rotate(dvec3 axis, double angle){
-  transform=glm::rotate(transform,angle,axis);
-}
-
- void Spatial::scale(double by){
-  transform=glm::scale(transform,dvec3(by));
-}
-
- dvec3 Spatial::position() const{
-  return transform[3];
-}
-
- void Spatial::position(dvec3 to){
-  transform[3]=dvec4(to,1);
-}
-
- dvec3 Spatial::xAxis() const{
-  return dvec3(transform[0][0],transform[1][0],transform[2][0]);
-}
- dvec3 Spatial::yAxis() const{
-  return dvec3(transform[0][1],transform[1][1],transform[2][1]);
-}
- dvec3 Spatial::zAxis() const{
-  return dvec3(transform[0][2],transform[1][2],transform[2][2]);
-}
-
- void Spatial::xAxis(dvec3 to){
-  transform[0][0]=to.x;
-  transform[1][0]=to.y;
-  transform[2][0]=to.z;
-}
- void Spatial::yAxis(dvec3 to){
-  transform[0][0]=to.x;
-  transform[1][0]=to.y;
-  transform[2][0]=to.z;
-}
- void Spatial::zAxis(dvec3 to){
-  transform[0][0]=to.x;
-  transform[1][0]=to.y;
-  transform[2][0]=to.z;
+void Spatial::rotate(vec3 axis,float theta){
+  //https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+  float c=cos(theta);
+  float s=sin(theta);
+  mat3 rot(
+    c+axis.x*axis.x*(1-c),          axis.x*axis.y*(1-c)-axis.z*s,     axis.x*axis.z*(1-c)+axis.y*s,
+    axis.y*axis.x*(1-c)+axis.z*s,   c+axis.y*axis.y*(1-c),            axis.y*axis.z*(1-c)-axis.x*s,
+    axis.z*axis.x*(1-c)-axis.y*s,   axis.z*axis.y*(1-c)+axis.x*s,     c+axis.z*axis.z*(1-c)
+  );
+  rot=transpose(rot);
+  rotation=rotation*rot;
 }

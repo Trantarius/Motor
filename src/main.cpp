@@ -16,10 +16,13 @@ struct InitFailedError : std::runtime_error{
 
 void windowResizeCallback(GLFWwindow* window, int width, int height){
   glViewport(0,0,width,height);
-  Render::main.camera.projection=perspective(radians(45.0f),(float)width/height,0.1f,100.0f);
+  Render::main.size=ivec2(width,height);
 }
 
 void openGLDebugCallback(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar* message, const void* userparam){
+  if(severity==GL_DEBUG_SEVERITY_NOTIFICATION){
+    return;
+  }
   printerr("GLDebug:");
   printerr("\tsource: "+glEnumName(source));
   printerr("\ttype: "+glEnumName(type));
@@ -37,7 +40,7 @@ void init(){
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-  window=glfwCreateWindow(640,480,"Hello",NULL,NULL);
+  window=glfwCreateWindow(Render::main.size.x,Render::main.size.y,"Hello",NULL,NULL);
   if(!window){
     glfwTerminate();
     throw InitFailedError("glfwCreateWindow failed");
@@ -54,6 +57,7 @@ void init(){
   glfwSetFramebufferSizeCallback(window,windowResizeCallback);
   glDebugMessageCallback(openGLDebugCallback,NULL);
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
 }
 
 void mainLoop(){
@@ -84,6 +88,9 @@ Render myrend;
 int main(){
   init();
 
+  Render::main.camera=std::unique_ptr<Camera>( new PerspectiveCamera());
+  Render::main.camera->renderer=&Render::main;
+
   Shader shader("src/shaders/mesh.vert","src/shaders/normals.frag");
   MeshData suzanne = MeshData::readOBJ("suzanne.obj");
   MeshData triangle = MeshData(Bloc<vec3>(vec3(-0.5,-0.5,-1),vec3(0,0.5,-1),vec3(0.5,-0.5,-1)));
@@ -91,7 +98,7 @@ int main(){
   Mesh mesh;
   mesh.mesh_data=suzanne;
   mesh.shader=shader;
-  mesh.translate(dvec3(0,0,-5));
+  mesh.position.z-=5;
 
 
   while (!shouldQuit){

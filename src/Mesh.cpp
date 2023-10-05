@@ -159,9 +159,9 @@ bool MeshData::is_null() const {
 void Mesh::render(){
   if(!shader.is_null() && !mesh_data.is_null()){
     shader.use();
-    shader.setUniform("model",(mat4)this->transform);
-    shader.setUniform("view",(mat4)inverse(renderer->camera.transform));
-    shader.setUniform("projection",(mat4)renderer->camera.projection);
+    shader.setUniform("model",getTransform());
+    shader.setUniform("view",renderer->getView());
+    shader.setUniform("projection",renderer->getProjection());
     mesh_data.draw(GL_TRIANGLES);
   }
 }

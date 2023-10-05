@@ -8,7 +8,6 @@ in vec3 Color;
 
 void main()
 {
-    FragColor.rgb = (Normal + vec3(2.0))/3.0;
-    //FragColor.rgb=vec3(1.0);
+    FragColor.rgb = (Normal + vec3(1.0))/2.0;
     FragColor.a=1.0;
 }
