@@ -1,7 +1,7 @@
 #include "Mesh.hpp"
 #include "main.hpp"
 #include "util/io.hpp"
-#include <fstream>
+#include "util/gl_enum_names.hpp"
 #include <map>
 
 
@@ -149,6 +149,7 @@ void MeshData::draw(uint mode) const {
     glDrawElements(mode,info->elemcount,GL_UNSIGNED_INT,0);
   }
   glBindVertexArray(0);
+  checkGLError();
 }
 
 bool MeshData::is_null() const {
@@ -170,136 +171,232 @@ void Mesh::render(){
 
 
 
-Array<string> splitString(string str,char delim){
+Array<string> splitString(string str, string delim){
   Array<string> ret;
-  string acc;
-  for(char c : str){
-    if(c==delim){
-      if(acc!=""){
-        ret.push_back(acc);
+  size_t start=0;
+  for(size_t n=0;n<str.size();n++){
+    if(delim.find(str[n])!=string::npos){
+      if(n!=start){
+        ret.push_back(str.substr(start,n-start));
       }
-      acc="";
-    }else{
-      acc.push_back(c);
+      n++;
+      start=n;
     }
   }
-  if(acc!=""){
-    ret.push_back(acc);
+
+  if(start<str.size()){
+    ret.push_back(str.substr(start));
   }
   return ret;
 }
 
+int countChar(string str,char c){
+  int count=0;
+  for(int n=0;n<str.size();n++){
+    if(str[n]==c){
+      count++;
+    }
+  }
+  return count;
+}
+
 MeshData MeshData::readOBJ(string path){
-  std::ifstream file(path);
+  Bloc<char> filebloc = readfile(path);
+  string file(filebloc.ptr,filebloc.size);
+  filebloc.destroy();
 
   Array<vec3> verts;
   Array<vec2> uvs;
   Array<vec3> norms;
   Array<vec3> colors;
-  Array<Array<string>> faces;
+  Array<Array<ivec3>> faces;
 
-  string line;
-  while(true){
-    line="";
-    getline(file,line);
-    if(line==""){
-      break;
+  Array<string> lines=splitString(file,"\n\r");
+
+  for(string& line : lines){
+    Array<string> words=splitString(line," ");
+
+    if(words.empty()){
+      continue;
     }
-
-    Array<string> words=splitString(line,' ');
 
     if(words[0]=="v"){
-      if(words.size()>=4){
-        verts.push_back(vec3(stof(words[1]),stof(words[2]),stof(words[3])));
-        if(words.size()==7){
-          colors.push_back(vec3(stof(words[4]),stof(words[5]),stof(words[6])));
-        }
+      if(words.size()<4){
+        continue;
       }
-    }
-    else if(words[0]=="vt"){
-      if(words.size()>=3){
-        uvs.push_back(vec2(stof(words[1]),stof(words[2])));
+      verts.push_back(vec3(stod(words[1]),stod(words[2]),stod(words[3])));
+
+      if(words.size()<7){
+        continue;
       }
+      colors.push_back(vec3(stod(words[4]),stod(words[5]),stod(words[6])));
     }
+
     else if(words[0]=="vn"){
-      if(words.size()>=4){
-        norms.push_back(vec3(stof(words[1]),stof(words[2]),stof(words[3])));
+      if(words.size()<4){
+        continue;
       }
+      norms.push_back(vec3(stod(words[1]),stod(words[2]),stod(words[3])));
     }
+
+    else if(words[0]=="vt"){
+      if(words.size()<3){
+        continue;
+      }
+      uvs.push_back(vec2(stod(words[1]),stod(words[2])));
+    }
+
     else if(words[0]=="f"){
-      Array<string> fv;
-      for(int w=1;w<words.size();w++){
-        fv.push_back(words[w]);
+      if(words.size()<4){
+        continue;
       }
-      faces.push_back(fv);
+      if(words.size()>4){
+        printerr("Non-triangular face in ",path);
+        continue;
+      }
+
+      Array<ivec3> face;
+      for(int c=1;c<words.size();c++){
+        int slash_count=countChar(words[c],'/');
+        ivec3 corner(-1,-1,-1);
+
+        if(slash_count==0){
+          corner.x=stol(words[c])-1;
+        }
+        else if(slash_count==1){
+          Array<string> pts=splitString(words[c],"/");
+          if(pts.size()!=2){
+            printerr("Bad format (1) found in ",path);
+            return MeshData();
+          }
+          corner.x=stol(pts[0])-1;
+          corner.y=stol(pts[1])-1;
+        }
+        else if(slash_count==2){
+          Array<string> pts=splitString(words[c],"/");
+          if(pts.size()<2){
+            printerr("Bad format (2) found in ",path);
+            return MeshData();
+          }
+          if(pts.size()==2){
+            corner.x=stol(pts[0])-1;
+            corner.z=stol(pts[1])-1;
+          }
+          else if(pts.size()==3){
+            corner.x=stol(pts[0])-1;
+            corner.y=stol(pts[1])-1;
+            corner.z=stol(pts[2])-1;
+          }
+          else{
+            printerr("Bad format (3) found in ",path);
+            return MeshData();
+          }
+        }
+        else{
+          printerr("Bad format (4) found in ",path);
+          return MeshData();
+        }
+
+        face.push_back(corner);
+      }
+      faces.push_back(face);
+    }
+  }
+  typedef bool (*compType)(ivec3,ivec3);
+  std::map<ivec3,size_t,compType> cornermap(compare);
+  Array<uvec3> elements;
+
+  for(Array<ivec3>& face : faces){
+    uvec3 element;
+    if(face.size()!=3){
+      printerr("Non triangular face found in ",path);
+      continue;
+    }
+    for(int c=0;c<face.size();c++){
+      if(cornermap.contains(face[c])){
+        element[c]=cornermap[face[c]];
+      }
+      else{
+        size_t c_idx=cornermap.size();
+        cornermap.emplace(face[c],c_idx);
+        element[c]=c_idx;
+      }
+    }
+    elements.push_back(element);
+  }
+
+  bool has_color;
+  bool has_uv=!uvs.empty();
+  bool has_normal=!norms.empty();
+
+  if(colors.empty()){
+    has_color=false;
+  }
+  else if(colors.size()==verts.size()){
+    has_color=true;
+  }
+  else{
+    printerr("Bad format (5) found in ",path);
+    return MeshData();
+  }
+
+  Array<uint> attribute_widths;
+  uint total_width=3;
+  attribute_widths.push_back(3);
+  if(has_color){
+    total_width+=3;
+    attribute_widths.push_back(3);
+  }
+  if(has_uv){
+    total_width+=2;
+    attribute_widths.push_back(2);
+  }
+  if(has_normal){
+    total_width+=3;
+    attribute_widths.push_back(3);
+  }
+
+  Array<float> vdata(cornermap.size()*total_width);
+  for(std::pair<uvec3,size_t> pr : cornermap){
+    size_t idx=pr.second*total_width;
+
+    vec3 vert=verts[pr.first.x];
+    vdata[idx++]=vert.x;
+    vdata[idx++]=vert.y;
+    vdata[idx++]=vert.z;
+
+    if(has_color){
+      vec3 color=colors[pr.first.x];
+      vdata[idx++]=color.r;
+      vdata[idx++]=color.g;
+      vdata[idx++]=color.b;
+    }
+
+    if(has_uv){
+      if(pr.first.y<0||pr.first.y>=uvs.size()){
+        printerr("Bad format (6) found in ",path);
+        return MeshData();
+      }
+      vec2 uv=uvs[pr.first.y];
+      vdata[idx++]=uv.x;
+      vdata[idx++]=uv.y;
+    }
+
+    if(has_normal){
+      if(pr.first.z<0||pr.first.z>=norms.size()){
+        printerr("Bad format (7) found in ",path);
+        return MeshData();
+      }
+      vec3 norm=norms[pr.first.z];
+      vdata[idx++]=norm.x;
+      vdata[idx++]=norm.y;
+      vdata[idx++]=norm.z;
     }
   }
 
-  Map<string,int> vertmap;
-  for(Array<string>& arr : faces){
-    for(string iv : arr){
-      vertmap[iv]=-1;
-    }
-  }
+  Bloc<float> vdata_bloc(vdata.data(),vdata.size());
+  Bloc<uint> attribute_widths_bloc(attribute_widths.data(),attribute_widths.size());
+  Bloc<uint> elements_bloc((uint*)elements.data(),elements.size()*3);
 
-  Array<float> vertbuffer;
-  int idx=0;
-  for(std::pair<string,int> pr : vertmap){
-    vertmap[pr.first]=idx++;
-
-    string word=pr.first;
-    int sep1=word.find_first_of('/');
-    int sep2=word.find_last_of('/');
-
-    int vidx=stoi(word.substr(0,sep1));
-    vertbuffer.push_back(verts[vidx].x);
-    vertbuffer.push_back(verts[vidx].y);
-    vertbuffer.push_back(verts[vidx].z);
-
-    if(!uvs.empty()){
-      int uvidx=stoi(word.substr(sep1+1,sep2-sep1-1));
-      vertbuffer.push_back(uvs[uvidx].x);
-      vertbuffer.push_back(uvs[uvidx].y);
-    }
-
-    if(!norms.empty()){
-      int normidx=stoi(word.substr(sep2+1));
-      vertbuffer.push_back(norms[normidx].x);
-      vertbuffer.push_back(norms[normidx].y);
-      vertbuffer.push_back(norms[normidx].z);
-    }
-
-    if(!colors.empty()){
-      vertbuffer.push_back(colors[vidx].x);
-      vertbuffer.push_back(colors[vidx].y);
-      vertbuffer.push_back(colors[vidx].z);
-    }
-  }
-
-  Array<uint> elembuffer;
-  for(Array<string>& face : faces){
-    for(string vid : face){
-      elembuffer.push_back(vertmap[vid]);
-    }
-  }
-
-  Array<uint> attribs;
-  attribs.push_back(3);
-  if(!uvs.empty()){
-    attribs.push_back(2);
-  }
-  if(!norms.empty()){
-    attribs.push_back(3);
-  }
-  if(!colors.empty()){
-    attribs.push_back(3);
-  }
-
-  MeshData md=MeshData(Bloc<float>(
-    vertbuffer.data(),vertbuffer.size()),
-    Bloc<uint>(attribs.data(),attribs.size()),
-    Bloc<uint>(elembuffer.data(),elembuffer.size())
-  );
-
-  return md;
+  return MeshData(vdata_bloc,attribute_widths_bloc,elements_bloc);
 }

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
+#include <type_traits>
 
 
 template<typename T>
@@ -16,6 +17,11 @@ struct Bloc{
   Bloc(size_t size):ptr(new T[size]{}),size(size){}
   Bloc(T* ptr, size_t size):ptr(ptr),size(size){}
   Bloc(Bloc& b):ptr(b.ptr),size(b.size){}
+  template<typename...Ts> requires (std::is_same<Ts,T>::value && ...)
+  Bloc(T a,Ts...args){
+    ptr=new T[sizeof...(args)+1]{a,args...};
+    size=sizeof...(args)+1;
+  }
 
   operator T*(){return ptr;}
   operator const T*() const {return ptr;}

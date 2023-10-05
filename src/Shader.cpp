@@ -1,6 +1,7 @@
 #include "Shader.hpp"
 #include "main.hpp"
 #include "util/io.hpp"
+#include "util/gl_enum_names.hpp"
 
 Shader::Shader(string vertex_shader_file,string fragment_shader_file){
   info=new Info();
@@ -97,71 +98,88 @@ void Shader::use() const {
   glUseProgram(info->gl_program);
 }
 
-template <> void Shader::setUniform(string name,float val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniform1fv(info->gl_program,location,1,(float*)(&val));
-}
-template <> void Shader::setUniform(string name,vec2 val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniform2fv(info->gl_program,location,1,(float*)(&val));
-}
-template <> void Shader::setUniform(string name,vec3 val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniform3fv(info->gl_program,location,1,(float*)(&val));
-}
-template <> void Shader::setUniform(string name,vec4 val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniform4fv(info->gl_program,location,1,(float*)(&val));
+#define SET_UNIFORM(type,ptype,letter)\
+template <> void Shader::setUniform(string name,type val){\
+  assert(info!=nullptr);\
+  int location = glGetUniformLocation(info->gl_program,name.c_str());\
+  assert(location!=-1);\
+  glProgramUniform##letter##v(info->gl_program,location,1,(ptype*)(&val));\
+  checkGLError();\
 }
 
-template <> void Shader::setUniform(string name,int val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniform1iv(info->gl_program,location,1,(int*)(&val));
-}
-template <> void Shader::setUniform(string name,ivec2 val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniform2iv(info->gl_program,location,1,(int*)(&val));
-}
-template <> void Shader::setUniform(string name,ivec3 val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniform3iv(info->gl_program,location,1,(int*)(&val));
-}
-template <> void Shader::setUniform(string name,ivec4 val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniform4iv(info->gl_program,location,1,(int*)(&val));
+SET_UNIFORM(float,float,1f)
+SET_UNIFORM(vec2,float,2f)
+SET_UNIFORM(vec3,float,3f)
+SET_UNIFORM(vec4,float,4f)
+
+SET_UNIFORM(double,double,1d)
+SET_UNIFORM(dvec2,double,2d)
+SET_UNIFORM(dvec3,double,3d)
+SET_UNIFORM(dvec4,double,4d)
+
+SET_UNIFORM(int,int,1i)
+SET_UNIFORM(ivec2,int,2i)
+SET_UNIFORM(ivec3,int,3i)
+SET_UNIFORM(ivec4,int,4i)
+
+SET_UNIFORM(uint,uint,1ui)
+SET_UNIFORM(uvec2,uint,2ui)
+SET_UNIFORM(uvec3,uint,3ui)
+SET_UNIFORM(uvec4,uint,4ui)
+
+#define SET_UNIFORM_MATRIX(type,ptype,letter)\
+template <> void Shader::setUniform(string name,type val){\
+  assert(info!=nullptr);\
+  int location = glGetUniformLocation(info->gl_program,name.c_str());\
+  assert(location!=-1);\
+  glProgramUniformMatrix##letter##v(info->gl_program,location,1,GL_FALSE,(ptype*)(&val));\
+  checkGLError();\
 }
 
-template <> void Shader::setUniform(string name,mat2 val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniformMatrix2fv(info->gl_program,location,1,false,(float*)(&val));
+SET_UNIFORM_MATRIX(mat2,float,2f)
+SET_UNIFORM_MATRIX(mat3,float,3f)
+SET_UNIFORM_MATRIX(mat4,float,4f)
+
+SET_UNIFORM_MATRIX(dmat2,double,2d)
+SET_UNIFORM_MATRIX(dmat3,double,3d)
+SET_UNIFORM_MATRIX(dmat4,double,4d)
+
+
+#define GET_UNIFORM(type,ptype,letter)\
+template <> type Shader::getUniform(string name){\
+  assert(info!=nullptr);\
+  int location = glGetUniformLocation(info->gl_program,name.c_str());\
+  assert(location!=-1);\
+  type ret;\
+  glGetnUniform##letter##v(info->gl_program,location,sizeof(type),(ptype*)&ret);\
+  checkGLError();\
+  return ret;\
 }
-template <> void Shader::setUniform(string name,mat3 val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniformMatrix3fv(info->gl_program,location,1,false,(float*)(&val));
-}
-template <> void Shader::setUniform(string name,mat4 val){
-  assert(info!=nullptr);
-  int location = glGetUniformLocation(info->gl_program,name.c_str());
-  assert(location!=-1);
-  glProgramUniformMatrix4fv(info->gl_program,location,1,false,(float*)(&val));
-}
+
+GET_UNIFORM(float,float,f)
+GET_UNIFORM(vec2,float,f)
+GET_UNIFORM(vec3,float,f)
+GET_UNIFORM(vec4,float,f)
+
+GET_UNIFORM(double,double,d)
+GET_UNIFORM(dvec2,double,d)
+GET_UNIFORM(dvec3,double,d)
+GET_UNIFORM(dvec4,double,d)
+
+GET_UNIFORM(int,int,i)
+GET_UNIFORM(ivec2,int,i)
+GET_UNIFORM(ivec3,int,i)
+GET_UNIFORM(ivec4,int,i)
+
+GET_UNIFORM(uint,uint,ui)
+GET_UNIFORM(uvec2,uint,ui)
+GET_UNIFORM(uvec3,uint,ui)
+GET_UNIFORM(uvec4,uint,ui)
+
+GET_UNIFORM(mat2,float,f)
+GET_UNIFORM(mat3,float,f)
+GET_UNIFORM(mat4,float,f)
+
+GET_UNIFORM(dmat2,double,d)
+GET_UNIFORM(dmat3,double,d)
+GET_UNIFORM(dmat4,double,d)

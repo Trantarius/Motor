@@ -11,6 +11,7 @@ class MeshData{
   Info* info=nullptr;
 
   void dispose();
+
 public:
 
   MeshData(Bloc<vec3> verts);
@@ -30,7 +31,7 @@ public:
   static MeshData readOBJ(string path);
 };
 
-class Mesh : Renderable{
+class Mesh : public Renderable{
   void render() override;
 public:
   MeshData mesh_data;

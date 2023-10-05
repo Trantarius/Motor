@@ -5,7 +5,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
-FILE(GLOB_RECURSE sources src/*.cpp)
+FILE(GLOB_RECURSE sources src/**.cpp)
 
 add_executable(Motor ${sources} glad/src/glad.c)
 
