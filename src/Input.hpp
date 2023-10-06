@@ -1,7 +1,7 @@
 #pragma once
 #include "util/strings.hpp"
 #include "keys.hpp"
-#include "util/glm.hpp"
+#include "util/math.hpp"
 #include "main.hpp"
 
 class Window;
@@ -27,8 +27,8 @@ public:
   void setCursorMode(CursorMode to);
   CursorMode getCursorMode();
 
-  vec2 getMousePos(){return mousePos;}
-  vec2 getMouseVel(){return mouseVel;}
+  fvec2 getMousePos(){return mousePos;}
+  fvec2 getMouseVel(){return mouseVel;}
 
   Input(Window& win);
 };

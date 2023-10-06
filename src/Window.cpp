@@ -3,13 +3,13 @@
 
 Map<GLFWwindow*,Window*> Window::ptrMap;
 
-uvec2 Window::getSize() const{
+ivec2 Window::getSize() const{
   int x,y;
   glfwGetWindowSize(window,&x,&y);
-  return uvec2(x,y);
+  return ivec2(x,y);
 }
 
-void Window::setSize(uvec2 to){
+void Window::setSize(ivec2 to){
   glfwSetWindowSize(window,to.x,to.y);
 }
 

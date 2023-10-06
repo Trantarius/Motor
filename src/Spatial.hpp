@@ -1,10 +1,10 @@
 #pragma once
-#include "util/glm.hpp"
+#include "util/math.hpp"
 struct Spatial{
-  vec3 scale{1,1,1};
-  mat3 rotation{1};
-  vec3 position{0};
+  fvec3 scale{1,1,1};
+  fmat3 rotation=fmat3::identity();
+  fvec3 position{0,0,0};
 
-  mat4 getTransform() const;
-  void rotate(vec3 axis, float theta);
+  fmat4 getTransform() const;
+  void rotate(fvec3 axis, float theta);
 };

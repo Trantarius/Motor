@@ -3,28 +3,23 @@
 
 void OrbitCamera::update(Updater* upd){
 
-  vec2 mp = Main::input->getMousePos();
-  vec2 mrel = mp-last_mouse_pos;
+  fvec2 mp = Main::input->getMousePos();
+  fvec2 mrel = mp-last_mouse_pos;
   last_mouse_pos=mp;
 
-  vec2 theta=mrel*speed;
+  fvec2 theta=mrel*speed;
 
-  mat3 yrot=rotationMtx(vec3(0,1,0),theta.x);
+  fmat3 yrot=rotationMtx(fvec3(0,1,0),theta.x);
 
   rotation=yrot*rotation;
 
-  mat3 xrot=rotationMtx(rotation*vec3(1,0,0),theta.y);
+  fmat3 xrot=rotationMtx(rotation*fvec3(1,0,0),theta.y);
   rotation=xrot*rotation;
 }
 
-mat4 OrbitCamera::getView() const {
-  print();
-  vec3 offset=rotation*vec3(0,0,orbit_distance);
-  print(offset);
-  mat4 tform=getTransform();
-  print(tform);
-  //mat4 omat=translate(tform,offset);
-  tform[3]+=vec4(offset,0);
-  print(tform);
+fmat4 OrbitCamera::getView() const {
+  fvec3 offset=rotation*fvec3(0,0,orbit_distance);
+  fmat4 tform=getTransform();
+  tform=translate(tform,offset);
   return inverse(tform);
 }

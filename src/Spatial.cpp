@@ -1,28 +1,20 @@
 #include "Spatial.hpp"
-#include <glm/gtc/matrix_transform.hpp>
 
-mat4 Spatial::getTransform() const{
-  mat3 mat(
-    scale.x,0,0,
-    0,scale.y,0,
-    0,0,scale.z
+fmat4 Spatial::getTransform() const{
+  fmat4 mat(
+    scale.x,0,0,0,
+    0,scale.y,0,0,
+    0,0,scale.z,0,
+    0,  0,  0,  1
   );
-  mat=rotation*mat;
+  mat=fmat4(rotation)*mat;
 
-  mat4 tf=mat4(mat);
-  tf[3]+=vec4(position,0);
+  fmat4 tf=fmat4(mat);
+  tf[3]+=fvec4(position,0);
   return tf;
 }
 
-void Spatial::rotate(vec3 axis,float theta){
-  //https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
-  float c=cos(theta);
-  float s=sin(theta);
-  mat3 rot(
-    c+axis.x*axis.x*(1-c),          axis.x*axis.y*(1-c)-axis.z*s,     axis.x*axis.z*(1-c)+axis.y*s,
-    axis.y*axis.x*(1-c)+axis.z*s,   c+axis.y*axis.y*(1-c),            axis.y*axis.z*(1-c)-axis.x*s,
-    axis.z*axis.x*(1-c)-axis.y*s,   axis.z*axis.y*(1-c)+axis.x*s,     c+axis.z*axis.z*(1-c)
-  );
-  rot=transpose(rot);
+void Spatial::rotate(fvec3 axis,float theta){
+  fmat3 rot=rotationMtx(axis,theta);
   rotation=rotation*rot;
 }

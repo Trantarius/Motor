@@ -1,4 +1,5 @@
 #pragma once
+#include <concepts>
 #include <string>
 #include <iostream>
 #include <cinttypes>
@@ -10,7 +11,9 @@ using std::string;
 typedef const char* const_cstr_t;
 typedef char* cstr_t;
 
-template<typename T>
+
+
+template<typename T> requires std::is_convertible<T,string>::value
 string tostr(T a){
   return (string)a;
 }
@@ -23,16 +26,16 @@ template <> inline string tostr(const char* a){
 }
 
 //casts to int first to force the char to print as a number
-template <> inline string tostr(char a){
+inline string tostr(char a){
   return std::to_string((int)a);
 }
 
-template <> inline string tostr(bool b){
+inline string tostr(bool b){
   return b?"true":"false";
 }
 
 #define STD(type) \
-template <> inline string tostr(type a){ \
+inline string tostr(type a){ \
   return std::to_string(a); \
 }
 
@@ -44,22 +47,27 @@ STD(float)  STD(double)
 
 #undef STD
 
-template<typename...Ts>
+template<typename T>
+concept Printable = requires(T a){
+  {tostr(a)}->std::same_as<string>;
+};
+
+template<Printable...Ts>
 void print(Ts...args){
   (std::cout<<...<<tostr(args))<<std::endl;
 }
 
-template<typename...Ts>
+template<Printable...Ts>
 void printerr(Ts...args){
   (std::cerr<<...<<tostr(args))<<std::endl;
 }
 
-template<typename...Ts>
+template<Printable...Ts>
 void print_(Ts...args){
   (std::cout<<...<<(tostr(args)+" "))<<std::endl;
 }
 
-template<typename...Ts>
+template<Printable...Ts>
 void printw(size_t width,Ts...args){
   static auto ensurewidth=[](size_t width,string s)->string{
     s.resize(width,' ');

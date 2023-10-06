@@ -4,7 +4,7 @@
 #include "util/gl_enum_names.hpp"
 #include <map>
 
-MeshData::MeshData(Bloc<vec3> verts){
+MeshData::MeshData(Bloc<fvec3> verts){
   assert(verts.size%3==0);
   info=new Info();
   info->refcount=1;
@@ -14,7 +14,7 @@ MeshData::MeshData(Bloc<vec3> verts){
   glBindVertexArray(info->VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, info->VBO);
-  glBufferData(GL_ARRAY_BUFFER,verts.size*sizeof(vec3),verts,GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER,verts.size*sizeof(fvec3),verts,GL_STATIC_DRAW);
 
   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),0);
   glEnableVertexAttribArray(0);
@@ -23,7 +23,7 @@ MeshData::MeshData(Bloc<vec3> verts){
   info->elemcount=verts.size;
 }
 
-MeshData::MeshData(Bloc<vec3> verts,Bloc<ivec3> faces){
+MeshData::MeshData(Bloc<fvec3> verts,Bloc<ivec3> faces){
   info=new Info();
   info->refcount=1;
   glGenVertexArrays(1,&info->VAO);
@@ -33,7 +33,7 @@ MeshData::MeshData(Bloc<vec3> verts,Bloc<ivec3> faces){
   glBindVertexArray(info->VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, info->VBO);
-  glBufferData(GL_ARRAY_BUFFER,verts.size*sizeof(vec3),verts,GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER,verts.size*sizeof(fvec3),verts,GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, info->EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.size*sizeof(ivec3),faces,GL_STATIC_DRAW);
@@ -204,10 +204,10 @@ MeshData MeshData::readOBJ(string path){
   string file(filebloc.ptr,filebloc.size);
   filebloc.destroy();
 
-  Array<vec3> verts;
-  Array<vec2> uvs;
-  Array<vec3> norms;
-  Array<vec3> colors;
+  Array<fvec3> verts;
+  Array<fvec2> uvs;
+  Array<fvec3> norms;
+  Array<fvec3> colors;
   Array<Array<ivec3>> faces;
 
   Array<string> lines=splitString(file,"\n\r");
@@ -223,26 +223,26 @@ MeshData MeshData::readOBJ(string path){
       if(words.size()<4){
         continue;
       }
-      verts.push_back(vec3(stod(words[1]),stod(words[2]),stod(words[3])));
+      verts.push_back(fvec3(stod(words[1]),stod(words[2]),stod(words[3])));
 
       if(words.size()<7){
         continue;
       }
-      colors.push_back(vec3(stod(words[4]),stod(words[5]),stod(words[6])));
+      colors.push_back(fvec3(stod(words[4]),stod(words[5]),stod(words[6])));
     }
 
     else if(words[0]=="vn"){
       if(words.size()<4){
         continue;
       }
-      norms.push_back(vec3(stod(words[1]),stod(words[2]),stod(words[3])));
+      norms.push_back(fvec3(stod(words[1]),stod(words[2]),stod(words[3])));
     }
 
     else if(words[0]=="vt"){
       if(words.size()<3){
         continue;
       }
-      uvs.push_back(vec2(stod(words[1]),stod(words[2])));
+      uvs.push_back(fvec2(stod(words[1]),stod(words[2])));
     }
 
     else if(words[0]=="f"){
@@ -303,10 +303,10 @@ MeshData MeshData::readOBJ(string path){
   }
   typedef bool (*compType)(ivec3,ivec3);
   std::map<ivec3,size_t,compType> cornermap(compare);
-  Array<uvec3> elements;
+  Array<ivec3> elements;
 
   for(Array<ivec3>& face : faces){
-    uvec3 element;
+    ivec3 element;
     if(face.size()!=3){
       printerr("Non triangular face found in ",path);
       continue;
@@ -356,19 +356,19 @@ MeshData MeshData::readOBJ(string path){
   }
 
   Array<float> vdata(cornermap.size()*total_width);
-  for(std::pair<uvec3,size_t> pr : cornermap){
+  for(std::pair<ivec3,size_t> pr : cornermap){
     size_t idx=pr.second*total_width;
 
-    vec3 vert=verts[pr.first.x];
+    fvec3 vert=verts[pr.first.x];
     vdata[idx++]=vert.x;
     vdata[idx++]=vert.y;
     vdata[idx++]=vert.z;
 
     if(has_color){
-      vec3 color=colors[pr.first.x];
-      vdata[idx++]=color.r;
-      vdata[idx++]=color.g;
-      vdata[idx++]=color.b;
+      fvec3 color=colors[pr.first.x];
+      vdata[idx++]=color.x;
+      vdata[idx++]=color.y;
+      vdata[idx++]=color.z;
     }
 
     if(has_uv){
@@ -376,7 +376,7 @@ MeshData MeshData::readOBJ(string path){
         printerr("Bad format (6) found in ",path);
         return MeshData();
       }
-      vec2 uv=uvs[pr.first.y];
+      fvec2 uv=uvs[pr.first.y];
       vdata[idx++]=uv.x;
       vdata[idx++]=uv.y;
     }
@@ -386,7 +386,7 @@ MeshData MeshData::readOBJ(string path){
         printerr("Bad format (7) found in ",path);
         return MeshData();
       }
-      vec3 norm=norms[pr.first.z];
+      fvec3 norm=norms[pr.first.z];
       vdata[idx++]=norm.x;
       vdata[idx++]=norm.y;
       vdata[idx++]=norm.z;

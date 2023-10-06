@@ -1,6 +1,6 @@
 #pragma once
 #include "util/collections.hpp"
-#include "util/glm.hpp"
+#include "util/math.hpp"
 #include "util/funcy.hpp"
 #include "Spatial.hpp"
 #include "util/mem.hpp"
@@ -11,22 +11,22 @@ class Window;
 
 struct Camera : public Spatial{
   Render* renderer=nullptr;
-  virtual mat4 getProjection() const=0;
-  virtual mat4 getView() const;
+  virtual fmat4 getProjection() const=0;
+  virtual fmat4 getView() const;
 };
 
 struct PerspectiveCamera : public Camera{
   float fov=PI/4;
   float near=0.01;
   float far=1000.0;
-  mat4 getProjection() const override;
+  fmat4 getProjection() const override;
 };
 
 struct OrthographicCamera : public Camera{
   float size=10.0;
   float near=0.01;
   float far=1000.0;
-  mat4 getProjection() const override;
+  fmat4 getProjection() const override;
 };
 
 class Renderable : public MemSafe{
@@ -39,9 +39,9 @@ public:
 
 class Render : public CYCLE(Renderable::render){
 
-  mat4 current_projection;
-  mat4 current_view;
-  uvec2 size=uvec2(1024,576);
+  fmat4 current_projection;
+  fmat4 current_view;
+  ivec2 size=ivec2(1024,576);
 
 public:
 
@@ -53,11 +53,11 @@ public:
   void pre_cycle() override;
   void post_cycle() override;
 
-  mat4 getProjection(){return current_projection;}
-  mat4 getView(){return current_view;}
+  fmat4 getProjection(){return current_projection;}
+  fmat4 getView(){return current_view;}
 
-  virtual void setSize(uvec2 to){size=to;}
-  virtual uvec2 getSize() const {return size;}
+  virtual void setSize(ivec2 to){size=to;}
+  virtual ivec2 getSize() const {return size;}
 };
 
 class WindowRender : public Render{
@@ -68,8 +68,8 @@ public:
   virtual void pre_render() override;
   virtual void post_render() override;
 
-  virtual void setSize(uvec2 to) override;
-  virtual uvec2 getSize() const  override;
+  virtual void setSize(ivec2 to) override;
+  virtual ivec2 getSize() const  override;
 
   Window& get_window() const{return window;}
 };

@@ -1,11 +1,10 @@
 #include <iostream>
 #include <stdexcept>
 #include "main.hpp"
-#include "util/glm.hpp"
+#include "util/math.hpp"
 #include "Render.hpp"
 #include "Mesh.hpp"
 #include "util/gl_enum_names.hpp"
-#include <glm/ext.hpp>
 #include "Input.hpp"
 #include "Window.hpp"
 #include <chrono>
@@ -86,7 +85,7 @@ int main(){
 
   Shader shader("src/shaders/mesh.vert","src/shaders/normals.frag");
   MeshData suzanne = MeshData::readOBJ("suzanne.obj");
-  MeshData triangle = MeshData(Bloc<vec3>(vec3(-0.5,-0.5,-1),vec3(0,0.5,-1),vec3(0.5,-0.5,-1)));
+  MeshData triangle = MeshData(Bloc<fvec3>(fvec3(-0.5,-0.5,-1),fvec3(0,0.5,-1),fvec3(0.5,-0.5,-1)));
 
   Mesh mesh;
   mesh.mesh_data=suzanne;

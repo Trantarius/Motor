@@ -3,6 +3,7 @@
 #include <string>
 #include "collections.hpp"
 #include "strings.hpp"
+#include "vec.hpp"
 using namespace std;
 
 multimap<long,string> _make_map();

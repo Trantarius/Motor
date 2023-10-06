@@ -108,9 +108,9 @@ template <> void Shader::setUniform(string name,type val){\
 }
 
 SET_UNIFORM(float,float,1f)
-SET_UNIFORM(vec2,float,2f)
-SET_UNIFORM(vec3,float,3f)
-SET_UNIFORM(vec4,float,4f)
+SET_UNIFORM(fvec2,float,2f)
+SET_UNIFORM(fvec3,float,3f)
+SET_UNIFORM(fvec4,float,4f)
 
 SET_UNIFORM(double,double,1d)
 SET_UNIFORM(dvec2,double,2d)
@@ -122,27 +122,26 @@ SET_UNIFORM(ivec2,int,2i)
 SET_UNIFORM(ivec3,int,3i)
 SET_UNIFORM(ivec4,int,4i)
 
-SET_UNIFORM(uint,uint,1ui)
-SET_UNIFORM(uvec2,uint,2ui)
-SET_UNIFORM(uvec3,uint,3ui)
-SET_UNIFORM(uvec4,uint,4ui)
+#undef SET_UNIFORM
 
 #define SET_UNIFORM_MATRIX(type,ptype,letter)\
 template <> void Shader::setUniform(string name,type val){\
   assert(info!=nullptr);\
   int location = glGetUniformLocation(info->gl_program,name.c_str());\
   assert(location!=-1);\
-  glProgramUniformMatrix##letter##v(info->gl_program,location,1,GL_FALSE,(ptype*)(&val));\
+  glProgramUniformMatrix##letter##v(info->gl_program,location,1,GL_TRUE,(ptype*)(&val));\
   checkGLError();\
 }
 
-SET_UNIFORM_MATRIX(mat2,float,2f)
-SET_UNIFORM_MATRIX(mat3,float,3f)
-SET_UNIFORM_MATRIX(mat4,float,4f)
+SET_UNIFORM_MATRIX(fmat2,float,2f)
+SET_UNIFORM_MATRIX(fmat3,float,3f)
+SET_UNIFORM_MATRIX(fmat4,float,4f)
 
 SET_UNIFORM_MATRIX(dmat2,double,2d)
 SET_UNIFORM_MATRIX(dmat3,double,3d)
 SET_UNIFORM_MATRIX(dmat4,double,4d)
+
+#undef SET_UNIFORM_MATRIX
 
 
 #define GET_UNIFORM(type,ptype,letter)\
@@ -157,9 +156,9 @@ template <> type Shader::getUniform(string name){\
 }
 
 GET_UNIFORM(float,float,f)
-GET_UNIFORM(vec2,float,f)
-GET_UNIFORM(vec3,float,f)
-GET_UNIFORM(vec4,float,f)
+GET_UNIFORM(fvec2,float,f)
+GET_UNIFORM(fvec3,float,f)
+GET_UNIFORM(fvec4,float,f)
 
 GET_UNIFORM(double,double,d)
 GET_UNIFORM(dvec2,double,d)
@@ -171,15 +170,25 @@ GET_UNIFORM(ivec2,int,i)
 GET_UNIFORM(ivec3,int,i)
 GET_UNIFORM(ivec4,int,i)
 
-GET_UNIFORM(uint,uint,ui)
-GET_UNIFORM(uvec2,uint,ui)
-GET_UNIFORM(uvec3,uint,ui)
-GET_UNIFORM(uvec4,uint,ui)
+#undef GET_UNIFORM
 
-GET_UNIFORM(mat2,float,f)
-GET_UNIFORM(mat3,float,f)
-GET_UNIFORM(mat4,float,f)
+#define GET_UNIFORM_MATRIX(type,ptype,letter)\
+template <> type Shader::getUniform(string name){\
+  assert(info!=nullptr);\
+  int location = glGetUniformLocation(info->gl_program,name.c_str());\
+  assert(location!=-1);\
+  type ret;\
+  glGetnUniform##letter##v(info->gl_program,location,sizeof(type),(ptype*)&ret);\
+  checkGLError();\
+  return transpose(ret);\
+}
 
-GET_UNIFORM(dmat2,double,d)
-GET_UNIFORM(dmat3,double,d)
-GET_UNIFORM(dmat4,double,d)
+GET_UNIFORM_MATRIX(fmat2,float,f)
+GET_UNIFORM_MATRIX(fmat3,float,f)
+GET_UNIFORM_MATRIX(fmat4,float,f)
+
+GET_UNIFORM_MATRIX(dmat2,double,d)
+GET_UNIFORM_MATRIX(dmat3,double,d)
+GET_UNIFORM_MATRIX(dmat4,double,d)
+
+#undef GET_UNIFORM_MATRIX

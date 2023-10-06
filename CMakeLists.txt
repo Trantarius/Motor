@@ -16,11 +16,8 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
 target_link_libraries(Motor PUBLIC glfw)
 
-add_subdirectory(glm)
-
 target_include_directories(Motor PUBLIC
                           "${PROJECT_SOURCE_DIR}/src"
                           "${PROJECT_SOURCE_DIR}/glfw/include"
                           "${PROJECT_SOURCE_DIR}/glad/include"
-                          "${PROJECT_SOURCE_DIR}/glm"
                           )

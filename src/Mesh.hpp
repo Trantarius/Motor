@@ -14,8 +14,8 @@ class MeshData{
 
 public:
 
-  MeshData(Bloc<vec3> verts);
-  MeshData(Bloc<vec3> verts,Bloc<ivec3> faces);
+  MeshData(Bloc<fvec3> verts);
+  MeshData(Bloc<fvec3> verts,Bloc<ivec3> faces);
   MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths);
   MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths,Bloc<uint> elements);
 

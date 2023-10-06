@@ -32,7 +32,7 @@ void Input::cursorPosCallback(GLFWwindow* window, double xpos, double ypos){
   Window::fromGLFW(window)->input.lastMouseTime=now;
 
   dvec2 deltaP = dvec2(xpos,ypos)-Window::fromGLFW(window)->input.mousePos;
-  Window::fromGLFW(window)->input.mousePos=vec2(xpos,ypos);
+  Window::fromGLFW(window)->input.mousePos=dvec2(xpos,ypos);
   Window::fromGLFW(window)->input.mouseVel=deltaP/deltaT;
 }
 

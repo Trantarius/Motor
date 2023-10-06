@@ -12,8 +12,8 @@ public:
   Input input{*this};
   WindowRender render{*this};
 
-  uvec2 getSize() const;
-  void setSize(uvec2 to);
+  ivec2 getSize() const;
+  void setSize(ivec2 to);
 
   GLFWwindow* glfw() const{return window;}
   static Window* fromGLFW(GLFWwindow*ptr);
