@@ -155,12 +155,12 @@ bool MeshData::is_null() const {
   return info==nullptr;
 }
 
-void Mesh::render(){
+void Mesh::render(Render* renderer){
   if(!shader.is_null() && !mesh_data.is_null()){
     shader.use();
     shader.setUniform("model",getTransform());
-    shader.setUniform("view",Render::current().getView());
-    shader.setUniform("projection",Render::current().getProjection());
+    shader.setUniform("view",renderer->getView());
+    shader.setUniform("projection",renderer->getProjection());
     mesh_data.draw(GL_TRIANGLES);
   }
 }

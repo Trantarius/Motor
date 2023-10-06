@@ -183,3 +183,16 @@ inline bool compare(uvec3 a,uvec3 b){
 inline bool compare(uvec4 a,uvec4 b){
   return hash(a)<hash(b);
 }
+
+
+inline mat3 rotationMtx(vec3 axis,float theta){
+  //https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+  float c=cos(theta);
+  float s=sin(theta);
+  mat3 rot(
+    c+axis.x*axis.x*(1-c),          axis.x*axis.y*(1-c)-axis.z*s,     axis.x*axis.z*(1-c)+axis.y*s,
+    axis.y*axis.x*(1-c)+axis.z*s,   c+axis.y*axis.y*(1-c),            axis.y*axis.z*(1-c)-axis.x*s,
+    axis.z*axis.x*(1-c)-axis.y*s,   axis.z*axis.y*(1-c)+axis.x*s,     c+axis.z*axis.z*(1-c)
+  );
+  return transpose(rot);
+}

@@ -11,8 +11,9 @@ public:
   enum CursorMode{NORMAL=0x00034001,HIDDEN=0x00034002,DISABLED=0x00034003};
 private:
   CursorMode cursorMode=NORMAL;
-  vec2 mouseVel;
-  vec2 mousePos;
+  dvec2 mouseVel{};
+  dvec2 mousePos{};
+  double lastMouseTime=time();
   Map<Key,bool> keyStates;
   Window& window;
 

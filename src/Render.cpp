@@ -1,35 +1,27 @@
 #include "Render.hpp"
 #include "Window.hpp"
 
-Render* Render::_current=nullptr;
-
-void Render::render(){
+void Render::pre_cycle(){
   assert(camera!=nullptr);
-  _current=this;
   current_projection=camera->getProjection();
-  current_view=inverse(camera->getTransform());
-
+  current_view=camera->getView();
   pre_render();
+}
 
-  for(auto it=render_calls.begin();it!=render_calls.end();){
-    SafePtr<Renderable> rable = *it;
-    if(rable.is_alive()){
-      rable->render();
-      it++;
-    }else{
-      it=render_calls.erase(it);
-    }
-  }
-
+void Render::post_cycle(){
   post_render();
 }
 
-mat4 PerspectiveCamera::getProjection(){
+mat4 Camera::getView() const {
+  return inverse(getTransform());
+}
+
+mat4 PerspectiveCamera::getProjection() const {
   assert(renderer!=nullptr);
   return perspective(fov,(float)renderer->getSize().x/renderer->getSize().y,near,far);
 }
 
-mat4 OrthographicCamera::getProjection(){
+mat4 OrthographicCamera::getProjection() const {
   assert(renderer!=nullptr);
   float aspect=(float)renderer->getSize().x/renderer->getSize().y;
   return ortho(-size/aspect,size/aspect,-size,size,near,far);
@@ -49,20 +41,4 @@ void WindowRender::setSize(uvec2 to){
 }
 uvec2 WindowRender::getSize() const {
   return window.getSize();
-}
-
-
-void Render::add(Renderable* rable){
-  SafePtr<Renderable> ptr(rable);
-  render_calls.push_back(ptr);
-}
-
-void Render::remove(Renderable* rable){
-  for(auto it=render_calls.begin();it!=render_calls.end();){
-    if(!it->is_alive() || it->get_ptr()==rable){
-      it=render_calls.erase(it);
-    }else{
-      it++;
-    }
-  }
 }

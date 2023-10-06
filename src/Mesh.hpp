@@ -32,7 +32,7 @@ public:
 };
 
 class Mesh : public Renderable, public Spatial{
-  void render() override;
+  void render(Render*) override;
 public:
   MeshData mesh_data;
   Shader shader;
