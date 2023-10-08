@@ -1,7 +1,7 @@
 #include "Window.hpp"
 #include "GLFW/glfw3.h"
 
-Map<GLFWwindow*,Window*> Window::ptrMap;
+Map<GLFWwindow*,Window*> Window::ptr_map;
 
 ivec2 Window::getSize() const{
   int x,y;
@@ -32,10 +32,10 @@ GLFWwindow* make_new_window(){
 Window::Window():window(make_new_window()){
   assert(window);
   glfwSetFramebufferSizeCallback(window,framebufferResizeCallback);
-  ptrMap[window]=this;
+  ptr_map[window]=this;
 }
 
 Window* Window::fromGLFW(GLFWwindow* ptr){
-  assert(ptrMap.contains(ptr));
-  return ptrMap[ptr];
+  assert(ptr_map.contains(ptr));
+  return ptr_map[ptr];
 }

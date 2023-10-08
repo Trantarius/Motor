@@ -151,12 +151,12 @@ void MeshData::draw(uint mode) const {
   checkGLError();
 }
 
-bool MeshData::is_null() const {
+bool MeshData::isNull() const {
   return info==nullptr;
 }
 
 void Mesh::render(Render* renderer){
-  if(!shader.is_null() && !mesh_data.is_null()){
+  if(!shader.isNull() && !mesh_data.isNull()){
     shader.use();
     shader.setUniform("model",getTransform());
     shader.setUniform("view",renderer->view);

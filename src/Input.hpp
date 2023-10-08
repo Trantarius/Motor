@@ -12,9 +12,7 @@ public:
   enum CursorMode{NORMAL=0x00034001,HIDDEN=0x00034002,DISABLED=0x00034003};
 private:
   CursorMode cursorMode=NORMAL;
-  dvec2 mouseVel{};
-  dvec2 mousePos{};
-  double lastMouseTime=time();
+  fvec2 mouse_pos{};
   Map<Key,bool> keyStates;
   Window& window;
 
@@ -33,8 +31,7 @@ public:
   void setCursorMode(CursorMode to);
   CursorMode getCursorMode();
 
-  fvec2 getMousePos(){return mousePos;}
-  fvec2 getMouseVel(){return mouseVel;}
+  fvec2 getMousePos(){return mouse_pos;}
 
   void addGenericListener(SafeFunc<void(Key,bool)> listener);
   void removeGenericListener(SafeFunc<void(Key,bool)> listener);

@@ -15,7 +15,7 @@ Window* Main::window=nullptr;
 Render* Main::render=nullptr;
 Input* Main::input=nullptr;
 Updater* Main::updater=nullptr;
-bool shouldQuit=false;
+bool should_quit=false;
 
 void init();
 void mainLoop();
@@ -98,7 +98,7 @@ void mainLoop(){
   size_t frame_counter=0;
   double last_frame=time();
 
-  while(!shouldQuit){
+  while(!should_quit){
     glfwPollEvents();
     Main::updater->cycle(Main::updater);
     Main::render->cycle(Main::render);
@@ -121,7 +121,7 @@ void mainLoop(){
 
 
 void quit(){
-  shouldQuit=true;
+  should_quit=true;
 }
 
 void terminate(){

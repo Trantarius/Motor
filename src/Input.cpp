@@ -27,13 +27,7 @@ void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 }
 
 void Input::cursorPosCallback(GLFWwindow* window, double xpos, double ypos){
-  double now=time();
-  double deltaT=now-Window::fromGLFW(window)->input.lastMouseTime;
-  Window::fromGLFW(window)->input.lastMouseTime=now;
-
-  dvec2 deltaP = dvec2(xpos,ypos)-Window::fromGLFW(window)->input.mousePos;
-  Window::fromGLFW(window)->input.mousePos=dvec2(xpos,ypos);
-  Window::fromGLFW(window)->input.mouseVel=deltaP/deltaT;
+  Window::fromGLFW(window)->input.mouse_pos=fvec2(xpos,ypos);
 }
 
 void Input::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods){

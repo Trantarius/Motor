@@ -26,7 +26,7 @@ public:
   void operator=(const MeshData& md);
 
   void draw(uint mode) const;
-  bool is_null() const;
+  bool isNull() const;
 
   static MeshData readOBJ(string path);
 };

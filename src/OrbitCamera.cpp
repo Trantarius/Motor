@@ -15,6 +15,10 @@ void OrbitCamera::update(Updater* upd){
 
   fmat3 xrot=rotationMtx(rotation*fvec3(1,0,0),theta.y);
   rotation=xrot*rotation;
+
+  rotation.x=normalize(rotation.x);
+  rotation.y=normalize(rotation.y);
+  rotation.z=normalize(rotation.z);
 }
 
 fmat4 OrbitCamera::getView(Render*) const {

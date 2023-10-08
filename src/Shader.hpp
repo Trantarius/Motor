@@ -27,7 +27,7 @@ public:
 
   void operator=(const Shader& s);
 
-  bool is_null() const;
+  bool isNull() const;
 
   void use() const;
   template<typename T>

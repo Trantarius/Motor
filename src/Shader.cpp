@@ -75,7 +75,7 @@ void Shader::dispose(){
   info=nullptr;
 }
 
-bool Shader::is_null() const{
+bool Shader::isNull() const{
   return info==nullptr;
 }
 

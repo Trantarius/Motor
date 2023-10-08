@@ -4,7 +4,7 @@
 #include "Input.hpp"
 
 class Window{
-  static Map<GLFWwindow*,Window*> ptrMap;
+  static Map<GLFWwindow*,Window*> ptr_map;
   GLFWwindow* window=nullptr;
 
 public:
