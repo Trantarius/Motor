@@ -82,6 +82,28 @@ typedef SafeFunc<void(void)> SafeCall;
 
 
 
+template<typename T>
+struct AutoPassType{
+  typedef T& type;
+};
+
+template<typename T> requires std::is_arithmetic<T>::value || std::is_enum<T>::value
+struct AutoPassType<T>{
+  typedef T type;
+};
+
+template <typename T>
+struct AutoPassType<T*>{
+  typedef T* type;
+};
+
+template <typename T>
+struct AutoPassType<T&>{
+  typedef T& type;
+};
+
+
+
 template<typename F>
 class Cycle;
 
@@ -134,7 +156,7 @@ public:
     }
   }
 
-  void cycle(std::add_lvalue_reference<ARGS>::type...args){
+  void cycle(AutoPassType<ARGS>::type...args){
 
     for(auto it=pre_cycle.begin();it!=pre_cycle.end();){
       if(!it->isCallable()){

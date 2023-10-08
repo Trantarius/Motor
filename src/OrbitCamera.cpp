@@ -1,8 +1,12 @@
 #include "OrbitCamera.hpp"
 #include "Input.hpp"
 
+
+fmat3 last_rot;
+
 void OrbitCamera::update(Updater* upd){
 
+  fvec2 lmp=last_mouse_pos;
   fvec2 mp = Main::input->getMousePos();
   fvec2 mrel = mp-last_mouse_pos;
   last_mouse_pos=mp;
@@ -16,9 +20,11 @@ void OrbitCamera::update(Updater* upd){
   fmat3 xrot=rotationMtx(rotation*fvec3(1,0,0),theta.y);
   rotation=xrot*rotation;
 
-  rotation.x=normalize(rotation.x);
-  rotation.y=normalize(rotation.y);
-  rotation.z=normalize(rotation.z);
+  if(len(mrel)>100){
+    print(mrel,": ",lmp,"->",mp);
+  }
+
+  last_rot=rotation;
 }
 
 fmat4 OrbitCamera::getView(Render*) const {
@@ -26,4 +32,16 @@ fmat4 OrbitCamera::getView(Render*) const {
   fmat4 tform=getTransform();
   tform=translate(tform,offset);
   return inverse(tform);
+}
+
+void OrbitCamera::onEscapePress(){
+  quit();
+}
+
+OrbitCamera::OrbitCamera(){
+  Main::input->addKeypressListener(Key::ESCAPE,SafeCall(this,&OrbitCamera::onEscapePress));
+}
+
+OrbitCamera::~OrbitCamera(){
+  Main::input->removeKeypressListener(Key::ESCAPE,SafeCall(this,&OrbitCamera::onEscapePress));
 }

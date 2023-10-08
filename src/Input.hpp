@@ -16,9 +16,9 @@ private:
   Map<Key,bool> keyStates;
   Window& window;
 
-  List<SafeFunc<void(Key,bool)>> generic_listeners;
-  Map<Key,List<SafeFunc<void(bool)>>> key_listeners;
-  Map<Key,List<SafeFunc<void(void)>>> keypress_listeners;
+  Cycle<void(Key,bool)> generic_listeners;
+  Map<Key,Cycle<void(bool)>> key_listeners;
+  Map<Key,Cycle<void(void)>> keypress_listeners;
 
 
   static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);

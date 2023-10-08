@@ -105,3 +105,12 @@ MAT_EQ_OP(-);
 MAT_EQ_OP(+);
 
 #undef MAT_EQ_OP
+
+template<Printable T,int N>
+string tostr(const mat<T,N>& mtx){
+  string ret;
+  for(int n=0;n<N;n++){
+    ret+=tostr(mtx[n])+"\n";
+  }
+  return ret;
+}

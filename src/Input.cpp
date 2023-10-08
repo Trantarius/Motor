@@ -21,8 +21,13 @@ Input::CursorMode Input::getCursorMode(){
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
   if(action==GLFW_PRESS){
     Window::fromGLFW(window)->input.keyStates[(Key)key]=true;
+    Window::fromGLFW(window)->input.generic_listeners.cycle((Key)key,true);
+    Window::fromGLFW(window)->input.key_listeners[(Key)key].cycle(true);
+    Window::fromGLFW(window)->input.keypress_listeners[(Key)key].cycle();
   }else if(action==GLFW_RELEASE){
     Window::fromGLFW(window)->input.keyStates[(Key)key]=false;
+    Window::fromGLFW(window)->input.generic_listeners.cycle((Key)key,false);
+    Window::fromGLFW(window)->input.key_listeners[(Key)key].cycle(false);
   }
 }
 
@@ -45,47 +50,29 @@ Input::Input(Window& win):window(win){
 
   for(auto pr : keyNames){
     keyStates.emplace(pr.first,false);
-    key_listeners.emplace(pr.first,List<SafeFunc<void(bool)>>());
-    keypress_listeners.emplace(pr.first,List<SafeFunc<void(void)>>());
+    key_listeners.emplace(pr.first,Cycle<void(bool)>());
+    keypress_listeners.emplace(pr.first,Cycle<void(void)>());
   }
 }
 
 void Input::addGenericListener(SafeFunc<void(Key,bool)> listener){
-  generic_listeners.push_back(listener);
+  generic_listeners.add(listener);
 }
 
 void Input::removeGenericListener(SafeFunc<void(Key,bool)> listener){
-  for(auto it=generic_listeners.begin();it!=generic_listeners.end();){
-    if(!it->isAlive() || *it==listener){
-      it=generic_listeners.erase(it);
-    }else{
-      it++;
-    }
-  }
+  generic_listeners.remove(listener);
 }
 
 void Input::addKeyListener(Key key,SafeFunc<void(bool)> listener){
-  key_listeners[key].push_back(listener);
+  key_listeners[key].add(listener);
 }
 void Input::removeKeyListener(Key key,SafeFunc<void(bool)> listener){
-  for(auto it=key_listeners[key].begin();it!=key_listeners[key].end();){
-    if(!it->isAlive() || *it==listener){
-      it=key_listeners[key].erase(it);
-    }else{
-      it++;
-    }
-  }
+  key_listeners[key].remove(listener);
 }
 
 void Input::addKeypressListener(Key key,SafeFunc<void(void)> listener){
-  keypress_listeners[key].push_back(listener);
+  keypress_listeners[key].add(listener);
 }
 void Input::removeKeypressListener(Key key,SafeFunc<void(void)> listener){
-  for(auto it=keypress_listeners[key].begin();it!=keypress_listeners[key].end();){
-    if(!it->isAlive() || *it==listener){
-      it=keypress_listeners[key].erase(it);
-    }else{
-      it++;
-    }
-  }
+  keypress_listeners[key].remove(listener);
 }

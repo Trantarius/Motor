@@ -21,13 +21,14 @@ void init();
 void mainLoop();
 void terminate();
 
-int main(){
-  init();
+int _main(){
 
   OrbitCamera* camera=new OrbitCamera();
   Main::render->camera=Unique<Camera>(camera);
   Main::render->camera->renderer=Main::render;
   Main::updater->add(*camera);
+
+  assert(Input::DISABLED==GLFW_CURSOR_DISABLED);
 
   Main::input->setCursorMode(Input::DISABLED);
 
@@ -41,11 +42,16 @@ int main(){
   Main::render->add(mesh);
 
   mainLoop();
-
-  terminate();
   return 0;
 }
 
+int main(){
+  print("start");
+  init();
+  int r=_main();
+  terminate();
+  print("end");
+}
 
 
 
@@ -78,6 +84,10 @@ void init(){
 
   glfwMakeContextCurrent(Main::window->glfw());
   glfwSwapInterval(1);//enable Vsync
+  if(glfwRawMouseMotionSupported()){
+    glfwSetInputMode(Main::window->glfw(),GLFW_RAW_MOUSE_MOTION,GLFW_TRUE);
+    print("raw mouse motion enabled");
+  }
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
   {
@@ -109,7 +119,6 @@ void mainLoop(){
     frame_counter++;
     double now=time();
     if(now-last_frame>1.0){
-      print((double)frame_counter/(now-last_frame));
       last_frame=now;
       frame_counter=0;
     }

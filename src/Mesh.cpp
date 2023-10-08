@@ -111,9 +111,10 @@ MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths,Bloc<uint> elem
 
 
 void MeshData::dispose(){
-  glDeleteVertexArrays(1,&info->VAO);
+  assert(info!=nullptr);
   glDeleteBuffers(1,&info->VBO);
   glDeleteBuffers(1,&info->EBO);
+  glDeleteVertexArrays(1,&info->VAO);
   delete info;
   info=nullptr;
 }
