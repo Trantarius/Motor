@@ -13,16 +13,8 @@ typedef char* cstr_t;
 
 
 
-template<typename T> requires std::is_convertible<T,string>::value
-string tostr(T a){
-  return (string)a;
-}
-
-template <> inline string tostr(string& a){
+inline string tostr(string& a){
   return a;
-}
-template <> inline string tostr(const char* a){
-  return string(a);
 }
 
 //casts to int first to force the char to print as a number
@@ -47,49 +39,9 @@ STD(float)  STD(double)
 
 #undef STD
 
-template<typename T>
-concept Printable = requires(T a){
-  {tostr(a)}->std::same_as<string>;
-};
 
-template<Printable...Ts>
-void print(Ts...args){
-  (std::cout<<...<<tostr(args))<<std::endl;
-}
 
-template<Printable...Ts>
-void printerr(Ts...args){
-  (std::cerr<<...<<tostr(args))<<std::endl;
-}
 
-template<Printable...Ts>
-void print_(Ts...args){
-  (std::cout<<...<<(tostr(args)+" "))<<std::endl;
-}
-
-template<Printable...Ts>
-void printw(size_t width,Ts...args){
-  static auto ensurewidth=[](size_t width,string s)->string{
-    s.resize(width,' ');
-    return s;
-  };
-  (std::cout<<...<<ensurewidth(width,tostr(args)))<<std::endl;
-}
-
-inline void print_loadbar(double completion){
-  string out="\r[";
-  int total_length=64;
-  int filled=total_length*completion;
-  for(int n=0;n<filled;n++){
-    out+='#';
-  }
-  for(int n=0;n<total_length-filled;n++){
-    out+=' ';
-  }
-  out+="]\r";
-  std::cout<<out;
-  std::cout.flush();
-}
 
 inline string size_format(size_t size){
   if(size>1000L*1000L*1000l*1000L*10L){
@@ -136,3 +88,60 @@ inline string hexstr(void* p){
 
 
 
+template<typename T>
+string tostr(T* a){
+  return hexstr((uint64_t)a);
+};
+
+template <> inline string tostr(const char* a){
+  return string(a);
+}
+
+template <> inline string tostr(char* a){
+  return string(a);
+}
+
+
+template<typename T>
+concept Printable = requires(T a){
+  {tostr(a)}->std::same_as<string>;
+};
+
+template<Printable...Ts>
+void print(Ts...args){
+  (std::cout<<...<<tostr(args))<<std::endl;
+}
+
+template<Printable...Ts>
+void printerr(Ts...args){
+  (std::cerr<<...<<tostr(args))<<std::endl;
+}
+
+template<Printable...Ts>
+void print_(Ts...args){
+  (std::cout<<...<<(tostr(args)+" "))<<std::endl;
+}
+
+template<Printable...Ts>
+void printw(size_t width,Ts...args){
+  static auto ensurewidth=[](size_t width,string s)->string{
+    s.resize(width,' ');
+    return s;
+  };
+  (std::cout<<...<<ensurewidth(width,tostr(args)))<<std::endl;
+}
+
+inline void print_loadbar(double completion){
+  string out="\r[";
+  int total_length=64;
+  int filled=total_length*completion;
+  for(int n=0;n<filled;n++){
+    out+='#';
+  }
+  for(int n=0;n<total_length-filled;n++){
+    out+=' ';
+  }
+  out+="]\r";
+  std::cout<<out;
+  std::cout.flush();
+}

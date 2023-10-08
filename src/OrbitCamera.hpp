@@ -8,5 +8,5 @@ public:
   float orbit_distance=5.0;
   float speed=0.01;
   void update(Updater* up) override;
-  fmat4 getView() const override;
+  fmat4 getView(Render*) const override;
 };

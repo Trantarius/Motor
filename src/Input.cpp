@@ -51,5 +51,47 @@ Input::Input(Window& win):window(win){
 
   for(auto pr : keyNames){
     keyStates.emplace(pr.first,false);
+    key_listeners.emplace(pr.first,List<SafeFunc<void(bool)>>());
+    keypress_listeners.emplace(pr.first,List<SafeFunc<void(void)>>());
+  }
+}
+
+void Input::addGenericListener(SafeFunc<void(Key,bool)> listener){
+  generic_listeners.push_back(listener);
+}
+
+void Input::removeGenericListener(SafeFunc<void(Key,bool)> listener){
+  for(auto it=generic_listeners.begin();it!=generic_listeners.end();){
+    if(!it->isAlive() || *it==listener){
+      it=generic_listeners.erase(it);
+    }else{
+      it++;
+    }
+  }
+}
+
+void Input::addKeyListener(Key key,SafeFunc<void(bool)> listener){
+  key_listeners[key].push_back(listener);
+}
+void Input::removeKeyListener(Key key,SafeFunc<void(bool)> listener){
+  for(auto it=key_listeners[key].begin();it!=key_listeners[key].end();){
+    if(!it->isAlive() || *it==listener){
+      it=key_listeners[key].erase(it);
+    }else{
+      it++;
+    }
+  }
+}
+
+void Input::addKeypressListener(Key key,SafeFunc<void(void)> listener){
+  keypress_listeners[key].push_back(listener);
+}
+void Input::removeKeypressListener(Key key,SafeFunc<void(void)> listener){
+  for(auto it=keypress_listeners[key].begin();it!=keypress_listeners[key].end();){
+    if(!it->isAlive() || *it==listener){
+      it=keypress_listeners[key].erase(it);
+    }else{
+      it++;
+    }
   }
 }

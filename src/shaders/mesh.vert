@@ -11,7 +11,6 @@ uniform mat4 projection;
 out vec3 Vertex;
 out vec3 Normal;
 out vec2 UV;
-out vec3 Color;
 
 void main()
 {

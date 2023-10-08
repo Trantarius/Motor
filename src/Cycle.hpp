@@ -1,64 +1,58 @@
 #pragma once
 #include "util/collections.hpp"
-#include "util/mem.hpp"
+#include "util/funcy.hpp"
 #include "main.hpp"
+#include "util/mem.hpp"
 
 
-template<typename T>
-class _memftype;
+template<typename F> class TimedCycle;
 
-template<typename R,typename C,typename A>
-struct _memftype<R (C::*)(A)>{
-  typedef R RETURN;
-  typedef C CLASS;
-  typedef A ARGUMENT;
-};
+template<typename RET,typename...ARGS>
+class TimedCycle<RET(ARGS...)> : public virtual Cycle<RET(ARGS...)>{
+  List<double> start_times;
+  double _cycle_time=0;
+  double _dT=0;
+  void preCycle(){
+    double now=time();
+    while(!start_times.empty() && now-start_times.front()>1){
+      start_times.pop_front();
+    }
+    _dT=now-start_times.back();
+    start_times.push_back(now);
+  }
 
-
-template<typename F,F FUNC> requires std::is_base_of<MemSafe,typename _memftype<F>::CLASS>::value
-class Cycle;
-
-template<typename T,typename C,void(T::* FUNC)(C)> requires std::is_base_of<MemSafe,T>::value
-class Cycle<decltype(FUNC),FUNC>{
-  List<SafePtr<T>> cycle_list;
-  double last_time=time();
+  void postCycle(){
+    double now=time();
+    _cycle_time=now-start_times.back();
+  }
 public:
 
-  double deltaT;
+  const double& cycle_time=_cycle_time;
+  const double& dT=_dT;
 
-  void add(T* ptr){cycle_list.push_back(SafePtr<T>(ptr));}
-  void remove(T* ptr){
-    for(auto it=cycle_list.begin();it!=cycle_list.end();){
-      if(!it->is_alive() || it->get_ptr()==ptr){
-        it=cycle_list.erase(it);
-      }else{
-        it++;
-      }
-    }
+  TimedCycle(){
+    Cycle<RET(ARGS...)>::addPreCycle(SafeCall(this,&TimedCycle::preCycle));
+    Cycle<RET(ARGS...)>::addPostCycle(SafeCall(this,&TimedCycle::postCycle));
   }
 
-  virtual void pre_cycle(){}
-  virtual void post_cycle(){}
-  void cycle(){
-
-    double now=time();
-    deltaT=now-last_time;
-    last_time=now;
-
-    pre_cycle();
-
-    for(auto it=cycle_list.begin();it!=cycle_list.end();){
-      if(!it->is_alive()){
-        it=cycle_list.erase(it);
-      }else{
-        ((*it).get_ptr()->*FUNC)((C)this);
-        it++;
-      }
-    }
-
-    post_cycle();
+  double getRate() const {
+    return start_times.size();
   }
 };
 
 
-#define CYCLE(memfunc) Cycle<decltype(&memfunc),&memfunc>
+template<typename F,F FUNC> class StaticCycle;
+
+template<typename CLASS,typename RET,typename...ARGS,RET (CLASS::* FUNC)(ARGS...)>
+struct StaticCycle<RET(CLASS::*)(ARGS...),FUNC> : virtual Cycle<RET(ARGS...)>{
+
+  void add(CLASS& obj){
+    Cycle<RET(ARGS...)>::add(SafeFunc<RET(ARGS...)>(&obj,FUNC));
+  }
+  void remove(CLASS& obj){
+    Cycle<RET(ARGS...)>::remove(SafeFunc<RET(ARGS...)>(&obj,FUNC));
+  }
+};
+
+
+#define STATIC_CYCLE(FN) StaticCycle<decltype(FN),FN>

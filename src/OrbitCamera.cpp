@@ -17,7 +17,7 @@ void OrbitCamera::update(Updater* upd){
   rotation=xrot*rotation;
 }
 
-fmat4 OrbitCamera::getView() const {
+fmat4 OrbitCamera::getView(Render*) const {
   fvec3 offset=rotation*fvec3(0,0,orbit_distance);
   fmat4 tform=getTransform();
   tform=translate(tform,offset);

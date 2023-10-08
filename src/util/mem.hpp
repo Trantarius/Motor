@@ -2,7 +2,6 @@
 #include <memory>
 #include <assert.h>
 
-
 template<typename T>
 using Unique=std::unique_ptr<T>;
 
@@ -26,6 +25,8 @@ public:
 
   template<typename T> requires std::is_base_of<MemSafe,T>::value
   friend class SafePtr;
+  template<typename T>
+  friend class SafeFunc;
 };
 
 template<typename T> requires std::is_base_of<MemSafe,T>::value

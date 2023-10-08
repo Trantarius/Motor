@@ -2,22 +2,21 @@
 #include "Window.hpp"
 
 
-void Render::pre_cycle(){
+void Render::preCycle(){
   assert(camera!=nullptr);
-  current_projection=camera->getProjection();
-  current_view=camera->getView();
-  pre_render();
+  current_projection=camera->getProjection(this);
+  current_view=camera->getView(this);
 }
 
-void Render::post_cycle(){
-  post_render();
+Render::Render(){
+  addPreCycle(SafeCall(this,&Render::preCycle));
 }
 
-fmat4 Camera::getView() const {
+fmat4 Camera::getView(Render* renderer) const {
   return inverse(getTransform());
 }
 
-fmat4 PerspectiveCamera::getProjection() const {
+fmat4 PerspectiveCamera::getProjection(Render* renderer) const {
   //http://www.songho.ca/opengl/gl_projectionmatrix.html
   assert(renderer!=nullptr);
   float height=tan(fov/2)*near;
@@ -30,7 +29,7 @@ fmat4 PerspectiveCamera::getProjection() const {
   );
 }
 
-fmat4 OrthographicCamera::getProjection() const {
+fmat4 OrthographicCamera::getProjection(Render* renderer) const {
   assert(renderer!=nullptr);
   float aspect=(float)renderer->getSize().x/renderer->getSize().y;
   float height=size;
@@ -43,12 +42,12 @@ fmat4 OrthographicCamera::getProjection() const {
   );
 }
 
-void WindowRender::pre_render(){
+void WindowRender::preRender(){
   glfwMakeContextCurrent(window.glfw());
   glBindFramebuffer(GL_FRAMEBUFFER,0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
-void WindowRender::post_render(){
+void WindowRender::postRender(){
   glfwSwapBuffers(window.glfw());
 }
 
@@ -57,4 +56,9 @@ void WindowRender::setSize(ivec2 to){
 }
 ivec2 WindowRender::getSize() const {
   return window.getSize();
+}
+
+WindowRender::WindowRender(Window& win):window(win){
+  addPreCycle(SafeFunc<void()>(this,&WindowRender::preRender));
+  addPostCycle(SafeFunc<void()>(this,&WindowRender::postRender));
 }

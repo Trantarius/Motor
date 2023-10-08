@@ -3,11 +3,11 @@
 
 class Updater;
 
-class Updatable : public MemSafe{
+class Updatable : public virtual MemSafe{
 protected:
   virtual void update(Updater*)=0;
 public:
   friend class Updater;
 };
 
-struct Updater : public CYCLE(Updatable::update){};
+struct Updater : public STATIC_CYCLE(&Updatable::update){};
