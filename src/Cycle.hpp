@@ -8,7 +8,7 @@
 template<typename F> class TimedCycle;
 
 template<typename RET,typename...ARGS>
-class TimedCycle<RET(ARGS...)> : public virtual Cycle<RET(ARGS...)>{
+class TimedCycle<RET(ARGS...)> : public virtual Cycle<RET(ARGS...)>, public virtual MemSafe{
   List<double> start_times;
   double _cycle_time=0;
   double _dT=0;

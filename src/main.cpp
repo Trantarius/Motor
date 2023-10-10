@@ -10,6 +10,7 @@
 #include <chrono>
 #include "Updater.hpp"
 #include "OrbitCamera.hpp"
+#include "util/rand.hpp"
 
 Window* Main::window=nullptr;
 Render* Main::render=nullptr;
@@ -21,14 +22,13 @@ void init();
 void mainLoop();
 void terminate();
 
+uint64_t nt = nanotime();
 int _main(){
 
   OrbitCamera* camera=new OrbitCamera();
   Main::render->camera=Unique<Camera>(camera);
   Main::render->camera->renderer=Main::render;
   Main::updater->add(*camera);
-
-  assert(Input::DISABLED==GLFW_CURSOR_DISABLED);
 
   Main::input->setCursorMode(Input::DISABLED);
 
@@ -46,11 +46,9 @@ int _main(){
 }
 
 int main(){
-  print("start");
   init();
   int r=_main();
   terminate();
-  print("end");
 }
 
 
@@ -86,7 +84,6 @@ void init(){
   glfwSwapInterval(1);//enable Vsync
   if(glfwRawMouseMotionSupported()){
     glfwSetInputMode(Main::window->glfw(),GLFW_RAW_MOUSE_MOTION,GLFW_TRUE);
-    print("raw mouse motion enabled");
   }
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -110,6 +107,7 @@ void mainLoop(){
 
   while(!should_quit){
     glfwPollEvents();
+    Main::input->update();
     Main::updater->cycle(Main::updater);
     Main::render->cycle(Main::render);
     if(glfwWindowShouldClose(Main::window->glfw())){
@@ -146,5 +144,13 @@ const std::chrono::steady_clock::time_point engine_start_time = std::chrono::ste
 double time(){
   auto now=std::chrono::steady_clock::now();
   std::chrono::duration<double> ret = now - engine_start_time;
+  return ret.count();
+}
+
+uint64_t nanotime(){
+  assert(std::chrono::steady_clock::period::den>=1000000000);
+  auto now=std::chrono::steady_clock::now();
+  std::chrono::steady_clock::duration diff = now - engine_start_time;
+  std::chrono::nanoseconds ret = std::chrono::duration_cast<std::chrono::nanoseconds>(diff);
   return ret.count();
 }

@@ -3,6 +3,7 @@
 #include <type_traits>
 #include "util/mem.hpp"
 #include "util/collections.hpp"
+#include "concepts.hpp"
 
 template<typename T>
 using Func = std::function<T>;
@@ -79,29 +80,6 @@ public:
 };
 
 typedef SafeFunc<void(void)> SafeCall;
-
-
-
-template<typename T>
-struct AutoPassType{
-  typedef T& type;
-};
-
-template<typename T> requires std::is_arithmetic<T>::value || std::is_enum<T>::value
-struct AutoPassType<T>{
-  typedef T type;
-};
-
-template <typename T>
-struct AutoPassType<T*>{
-  typedef T* type;
-};
-
-template <typename T>
-struct AutoPassType<T&>{
-  typedef T& type;
-};
-
 
 
 template<typename F>

@@ -2,6 +2,7 @@
 #include "strings.hpp"
 #include "bits.hpp"
 #include <cstring>
+#include <cmath>
 
 #define VEC_CLASS(N) \
 T& operator[](int n){\
@@ -11,17 +12,17 @@ const T& operator[](int n) const {\
   return data[n];\
 }\
 template<typename...Ts> requires (std::is_convertible<Ts,T>::value&&...) && (sizeof...(Ts)==0 || sizeof...(Ts)==N)\
-vec(Ts...args):data{static_cast<T>(args)...}{}\
+vec(Ts...args):data{((T)args)...}{}\
 \
 template<int _N,typename...Ts> requires (std::is_convertible<Ts,T>::value&&...) && (N-_N==sizeof...(Ts))\
 vec(vec<T,_N> v,Ts...args){\
   memcpy(data,v.data,_N*sizeof(T));\
   T arr[sizeof...(Ts)]{((T)args)...};\
-  memcpy(data,arr,sizeof...(Ts)*sizeof(T));\
+  memcpy(data+_N,arr,sizeof...(Ts)*sizeof(T));\
 }\
 \
 template<typename _T> requires std::is_convertible<_T,T>::value \
-vec(vec<_T,N>& v){\
+vec(const vec<_T,N>& v){\
   for(int n=0;n<N;n++){\
     data[n]=(T)v.data[n];\
   }\
@@ -38,7 +39,9 @@ template<typename T,int N> requires (N>1)
 struct vec{
   T data[N]{};
 
-  VEC_CLASS(N)
+
+    VEC_CLASS(N)
+
 };
 
 template<typename T>
@@ -247,4 +250,35 @@ inline bool compare(ivec3 a,ivec3 b){
 }
 inline bool compare(ivec4 a,ivec4 b){
   return hash(a)<hash(b);
+}
+
+
+
+template<typename T,int N>
+T dot(vec<T,N> a,vec<T,N> b){
+  T sum=0;
+  for(int n=0;n<N;n++){
+    sum+=a[n]*b[n];
+  }
+  return sum;
+}
+
+template<typename T,int N>
+T lensqr(vec<T,N> v){
+  return dot(v,v);
+}
+
+template<typename T,int N>
+T len(vec<T,N> v){
+  return sqrt(lensqr(v));
+}
+
+template<typename T>
+vec<T,3> cross(vec<T,3> a,vec<T,3> b){
+  return vec<T,3>(a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]);
+}
+
+template<typename T,int N>
+vec<T,N> normalize(vec<T,N> v){
+  return v/len(v);
 }

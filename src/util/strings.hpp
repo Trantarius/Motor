@@ -122,6 +122,22 @@ void print_(Ts...args){
   (std::cout<<...<<(tostr(args)+" "))<<std::endl;
 }
 
+template<Printable T>
+void _printsep(string& sep,T arg){
+  std::cout<<tostr(arg)<<std::endl;
+}
+
+template<Printable T,Printable T2,Printable...Ts>
+void _printsep(string& sep,T arg,T2 arg2,Ts...args){
+  std::cout<<tostr(arg)<<sep;
+  _printsep(sep,arg2,args...);
+}
+
+template<Printable...Ts>
+void printsep(string sep,Ts...args){
+  _printsep(sep,args...);
+}
+
 template<Printable...Ts>
 void printw(size_t width,Ts...args){
   static auto ensurewidth=[](size_t width,string s)->string{

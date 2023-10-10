@@ -18,6 +18,19 @@ Input::CursorMode Input::getCursorMode(){
   return cursorMode;
 }
 
+void Input::update(){
+  double now=time();
+  fvec2 mrel=mouse_pos-last_mouse_pos;
+  double dt=now-last_update;
+  fvec2 mvel=mrel/dt;
+  if(len(mvel)>10000){
+    mvel=fvec2(0,0);
+  }
+  mouse_vel=mvel;
+  last_update=now;
+  last_mouse_pos=mouse_pos;
+}
+
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
   if(action==GLFW_PRESS){
     Window::fromGLFW(window)->input.keyStates[(Key)key]=true;

@@ -3,7 +3,6 @@
 #include "Updater.hpp"
 
 class OrbitCamera : public Updatable, public PerspectiveCamera{
-  fvec2 last_mouse_pos{};
   void onEscapePress();
 public:
   float orbit_distance=5.0;

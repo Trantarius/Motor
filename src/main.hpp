@@ -4,6 +4,7 @@
 
 void quit();
 double time();
+uint64_t nanotime();
 
 class Input;
 class Render;

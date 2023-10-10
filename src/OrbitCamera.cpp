@@ -2,33 +2,22 @@
 #include "Input.hpp"
 
 
-fmat3 last_rot;
-
 void OrbitCamera::update(Updater* upd){
 
-  fvec2 lmp=last_mouse_pos;
-  fvec2 mp = Main::input->getMousePos();
-  fvec2 mrel = mp-last_mouse_pos;
-  last_mouse_pos=mp;
+  fvec2 mrel = Main::input->getMouseVel()*upd->dT;
 
   fvec2 theta=mrel*speed;
 
-  fmat3 yrot=rotationMtx(fvec3(0,1,0),theta.x);
+  fquat yrot=quat(fvec3(0,1,0),theta.x);
 
-  rotation=yrot*rotation;
+  rotation=quatMul(yrot,rotation);
 
-  fmat3 xrot=rotationMtx(rotation*fvec3(1,0,0),theta.y);
-  rotation=xrot*rotation;
-
-  if(len(mrel)>100){
-    print(mrel,": ",lmp,"->",mp);
-  }
-
-  last_rot=rotation;
+  fquat xrot=quat(quatRot(rotation,fvec3(1,0,0)),theta.y);
+  rotation=quatMul(xrot,rotation);
 }
 
 fmat4 OrbitCamera::getView(Render*) const {
-  fvec3 offset=rotation*fvec3(0,0,orbit_distance);
+  fvec3 offset=quatRot(rotation,fvec3(0,0,orbit_distance));
   fmat4 tform=getTransform();
   tform=translate(tform,offset);
   return inverse(tform);

@@ -1,8 +1,9 @@
 #pragma once
 #include "util/math.hpp"
+#include "util/quat.hpp"
 struct Spatial{
   fvec3 scale{1,1,1};
-  fmat3 rotation=fmat3::identity();
+  fquat rotation=quatIdentity<float>();
   fvec3 position{0,0,0};
 
   fmat4 getTransform() const;

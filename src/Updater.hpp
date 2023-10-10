@@ -10,4 +10,4 @@ public:
   friend class Updater;
 };
 
-struct Updater : public STATIC_CYCLE(&Updatable::update){};
+struct Updater : public STATIC_CYCLE(&Updatable::update), public virtual TimedCycle<void(Updater*)>{};

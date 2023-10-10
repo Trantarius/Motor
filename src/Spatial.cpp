@@ -7,7 +7,7 @@ fmat4 Spatial::getTransform() const{
     0,0,scale.z,0,
     0,  0,  0,  1
   );
-  mat=fmat4(rotation)*mat;
+  mat=fmat4(quatMtx(rotation))*mat;
 
   fmat4 tf=fmat4(mat);
   tf[3]+=fvec4(position,0);
@@ -15,6 +15,6 @@ fmat4 Spatial::getTransform() const{
 }
 
 void Spatial::rotate(fvec3 axis,float theta){
-  fmat3 rot=rotationMtx(axis,theta);
-  rotation=rotation*rot;
+  fquat rot=quat(axis,theta);
+  rotation=quatMul(rot,rotation);
 }

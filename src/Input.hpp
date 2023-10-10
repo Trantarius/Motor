@@ -13,6 +13,9 @@ public:
 private:
   CursorMode cursorMode=NORMAL;
   fvec2 mouse_pos{};
+  fvec2 mouse_vel{};
+  double last_update=0;
+  fvec2 last_mouse_pos{};
   Map<Key,bool> keyStates;
   Window& window;
 
@@ -32,6 +35,8 @@ public:
   CursorMode getCursorMode();
 
   fvec2 getMousePos(){return mouse_pos;}
+  fvec2 getMouseVel(){return mouse_vel;}
+  void update();
 
   void addGenericListener(SafeFunc<void(Key,bool)> listener);
   void removeGenericListener(SafeFunc<void(Key,bool)> listener);
