@@ -13,7 +13,7 @@ Render::Render(){
 }
 
 fmat4 Camera::getView(Render* renderer) const {
-  return inverse(getTransform());
+  return transform.toInvMatrix();
 }
 
 fmat4 PerspectiveCamera::getProjection(Render* renderer) const {

@@ -6,19 +6,19 @@ void OrbitCamera::update(Updater* upd){
 
   fvec2 mrel = Main::input->getMouseVel()*upd->dT;
 
-  fvec2 theta=mrel*speed;
+  dvec2 theta=mrel*speed;
 
-  fquat yrot=quat(fvec3(0,1,0),theta.x);
+  dquat yrot=quat(dvec3(0,1,0),theta.x);
 
   rotation=quatMul(yrot,rotation);
 
-  fquat xrot=quat(quatRot(rotation,fvec3(1,0,0)),theta.y);
+  dquat xrot=quat(quatRot(rotation,fvec3(1,0,0)),theta.y);
   rotation=quatMul(xrot,rotation);
 }
 
 fmat4 OrbitCamera::getView(Render*) const {
   fvec3 offset=quatRot(rotation,fvec3(0,0,orbit_distance));
-  fmat4 tform=getTransform();
+  fmat4 tform=transform.toMatrix();
   tform=translate(tform,offset);
   return inverse(tform);
 }

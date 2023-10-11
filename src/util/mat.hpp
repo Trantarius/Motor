@@ -138,95 +138,95 @@ mat<T,2> inverse(const mat<T,2>& mtx){
 
 template<typename T>
 mat<T,3> inverse(const mat<T,3>& mtx){
-#define A mtx[0][0]
-#define B mtx[0][1]
-#define C mtx[0][2]
-#define D mtx[1][0]
-#define E mtx[1][1]
-#define F mtx[1][2]
-#define G mtx[2][0]
-#define H mtx[2][1]
-#define I mtx[2][2]
 
-  T det=1.0/(A*E*I - A*F*H - B*D*I + B*F*G + C*D*H + C*E*G);
-  return mat<T,3>(
-    (E*I-F*H)/det,  (C*H-B*I)/det,  (B*F-C*E)/det,
-    (F*G-D*I)/det,  (A*I-C*G)/det,  (C*D-A*F)/det,
-    (D*H-E*G)/det,  (B*G-A*H)/det,  (A*E-B*D)/det
-  );
+  mat<T,3> ret;
+  T* out=(T*)&ret;
+  const T* M=(const T*)&mtx;
 
-#undef A
-#undef B
-#undef C
-#undef D
-#undef E
-#undef F
-#undef G
-#undef H
-#undef I
+  const T x0 = 1.0/M[0];
+  const T x1 = x0*M[6];
+  const T x2 = -x1*M[1] + M[7];
+  const T x3 = x0*M[3];
+  const T x4 = 1.0/(-x3*M[1] + M[4]);
+  const T x5 = x0*x2*x4*M[3] - x1;
+  const T x6 = -x3*M[2] + M[5];
+  const T x7 = x4*x6;
+  const T x8 = x2*x7;
+  const T x9 = 1.0/(-x1*M[2] - x8 + M[8]);
+  const T x10 = x9*M[2];
+  const T x11 = x5*x9;
+  const T x12 = x4*(-x11*x6 - x3);
+  const T x13 = x4*(x8*x9 + 1);
+
+  out[0] = x0*(-x10*x5 - x12*M[1] + 1);
+  out[1] = x0*(-x13*M[1] + x2*x4*x9*M[2]);
+  out[2] = x0*(-x10 + x4*x6*x9*M[1]);
+  out[3] = x12;
+  out[4] = x13;
+  out[5] = -x7*x9;
+  out[6] = x11;
+  out[7] = -x2*x4*x9;
+  out[8] = x9;
+
+  return ret;
 }
 
 template<typename T>
 mat<T,4> inverse(const mat<T,4>& mtx){
 
-#define A mtx[0][0]
-#define B mtx[0][1]
-#define C mtx[0][2]
-#define D mtx[0][3]
-#define E mtx[1][0]
-#define F mtx[1][1]
-#define G mtx[1][2]
-#define H mtx[1][3]
-#define I mtx[2][0]
-#define J mtx[2][1]
-#define K mtx[2][2]
-#define L mtx[2][3]
-#define M mtx[3][0]
-#define N mtx[3][1]
-#define O mtx[3][2]
-#define P mtx[3][3]
+  mat<T,4> ret;
+  T* out=(T*)&ret;
+  const T* M=(const T*)&mtx;
 
-T det = D*G*J*M - C*H*J*M - D*F*K*M + B*H*K*M + C*F*L*M - B*G*L*M -
-        D*G*I*N + C*H*I*N + D*E*K*N - A*H*K*N - C*E*L*N + A*G*L*N +
-        D*F*I*O - B*H*I*O - D*E*J*O + A*H*J*O + B*E*L*O - A*F*L*O -
-        C*F*I*P + B*G*I*P + C*E*J*P - A*G*J*P - B*E*K*P + A*F*K*P;
+  const T x0 = 1.0/M[0];
+  const T x1 = x0*M[12];
+  const T x2 = -x1*M[1] + M[13];
+  const T x3 = x0*M[4];
+  const T x4 = 1.0/(-x3*M[1] + M[5]);
+  const T x5 = x0*M[8];
+  const T x6 = -x5*M[1] + M[9];
+  const T x7 = -x0*x4*x6*M[4] + x5;
+  const T x8 = -x3*M[2] + M[6];
+  const T x9 = x4*x6;
+  const T x10 = 1.0/(-x5*M[2] - x8*x9 + M[10]);
+  const T x11 = x2*x4;
+  const T x12 = -x1*M[2] - x11*x8 + M[14];
+  const T x13 = x10*x12;
+  const T x14 = x0*x2*x4*M[4] - x1 + x13*x7;
+  const T x15 = -x3*M[3] + M[7];
+  const T x16 = -x15*x9 - x5*M[3] + M[11];
+  const T x17 = x13*x16;
+  const T x18 = 1.0/(-x1*M[3] - x11*x15 - x17 + M[15]);
+  const T x19 = x18*M[3];
+  const T x20 = x14*x18;
+  const T x21 = x10*(-x16*x20 - x7);
+  const T x22 = x15*x18;
+  const T x23 = x4*(-x14*x22 - x21*x8 - x3);
+  const T x24 = -x11 + x13*x9;
+  const T x25 = x18*x24;
+  const T x26 = x10*(-x16*x25 - x9);
+  const T x27 = x4*(-x22*x24 - x26*x8 + 1);
+  const T x28 = x10*(x17*x18 + 1);
+  const T x29 = x4*(x10*x12*x15*x18 - x28*x8);
+  const T x30 = x10*x16*x18;
+  const T x31 = x4*(-x22 + x30*x8);
 
-  return mat<T,4>(
-    (-H*K*N + G*L*N + H*J*O - F*L*O - G*J*P + F*K*P)/det,
-    (D*K*N - C*L*N - D*J*O + B*L*O + C*J*P - B*K*P)/det,
-    (-D*G*N + C*H*N + D*F*O - B*H*O - C*F*P + B*G*P)/det,
-    (D*G*J - C*H*J - D*F*K + B*H*K + C*F*L - B*G*L)/det,
+  out[0] = x0*(-x14*x19 - x21*M[2] - x23*M[1] + 1);
+  out[1] = x0*(-x19*x24 - x26*M[2] - x27*M[1]);
+  out[2] = x0*(x10*x12*x18*M[3] - x28*M[2] - x29*M[1]);
+  out[3] = x0*(x10*x16*x18*M[2] - x19 - x31*M[1]);
+  out[4] = x23;
+  out[5] = x27;
+  out[6] = x29;
+  out[7] = x31;
+  out[8] = x21;
+  out[9] = x26;
+  out[10] = x28;
+  out[11] = -x30;
+  out[12] = x20;
+  out[13] = x25;
+  out[14] = -x13*x18;
+  out[15] = x18;
 
-    (H*K*M - G*L*M - H*I*O + E*L*O + G*I*P - E*K*P)/det,
-    (-D*K*M + C*L*M + D*I*O - A*L*O - C*I*P + A*K*P)/det,
-    (D*G*M - C*H*M - D*E*O + A*H*O + C*E*P - A*G*P)/det,
-    (-D*G*I + C*H*I + D*E*K - A*H*K - C*E*L + A*G*L)/det,
-
-    (-H*J*M + F*L*M + H*I*N - E*L*N - F*I*P + E*J*P)/det,
-    (D*J*M - B*L*M - D*I*N + A*L*N + B*I*P - A*J*P)/det,
-    (-D*F*M + B*H*M + D*E*N - A*H*N - B*E*P + A*F*P)/det,
-    (D*F*I - B*H*I - D*E*J + A*H*J + B*E*L - A*F*L)/det,
-
-    (G*J*M - F*K*M - G*I*N + E*K*N + F*I*O - E*J*O)/det,
-    (-C*J*M + B*K*M + C*I*N - A*K*N - B*I*O + A*J*O)/det,
-    (C*F*M - B*G*M - C*E*N + A*G*N + B*E*O - A*F*O)/det,
-    (-C*F*I + B*G*I + C*E*J - A*G*J - B*E*K + A*F*K)/det
-  );
-
-#undef A
-#undef B
-#undef C
-#undef D
-#undef E
-#undef F
-#undef G
-#undef H
-#undef I
-#undef J
-#undef K
-#undef L
-#undef M
-#undef N
-#undef O
-#undef P
+  return ret;
 }

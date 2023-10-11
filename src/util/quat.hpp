@@ -26,7 +26,7 @@ QUAT(T) quat(const vec<T,3>& axis,T theta){
 
 template<typename T>
 constexpr QUAT(T) quatIdentity(){
-  return normalize(QUAT(T)(0,0,0,1));
+  return QUAT(T)(0,0,0,1);
 }
 
 template<typename A,typename B>
@@ -53,7 +53,7 @@ QUAT(T) quatInv(const QUAT(T)& q){
 template<typename A,typename B>
 #define R decltype(A()*B())
 vec<R,3> quatRot(const QUAT(A)& q,const vec<B,3>& v){
-  QUAT(R) p(v,0);
+  QUAT(B) p(v,0);
   QUAT(R) ret=quatMul(quatMul(q,p),quatInv(q));
   return ret.xyz;
 }
