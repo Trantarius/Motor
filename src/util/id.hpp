@@ -1,0 +1,65 @@
+#pragma once
+#include <cinttypes>
+#include "strings.hpp"
+
+constexpr uint64_t const_hash(const char* ptr){
+  uint64_t ret=0;
+  uint8_t off=0;
+  uint64_t idx=0;
+  do{
+    ret ^= ((uint64_t)ptr[idx])<<off;
+    off = (off+13)%57;
+  }while(ptr[++idx]!=0);
+  return ret;
+}
+
+class ID{
+  uint64_t id=0;
+public:
+
+  constexpr ID(){}
+  constexpr ID(uint64_t id):id(id){}
+  constexpr ID(const char* str):id(const_hash(str)){}
+
+  constexpr operator uint64_t() const {return id;}
+  constexpr operator int64_t() const {return id;}
+
+  constexpr operator uint32_t() const {return id ^ id>>32;}
+  constexpr operator int32_t() const {return id ^ id>>32;}
+
+  constexpr operator uint16_t() const {return operator uint32_t() ^ operator uint32_t() >>16;}
+  constexpr operator int16_t() const {return operator uint32_t() ^ operator uint32_t() >>16;}
+
+  constexpr operator uint8_t() const {return operator uint16_t() ^ operator uint16_t() >>8;}
+  constexpr operator int8_t() const {return operator uint16_t() ^ operator uint16_t() >>8;}
+
+  struct Hash{
+    constexpr uint64_t operator ()(const ID& id) const {
+      return id;
+    }
+  };
+
+#define COMP_OP(OP)\
+  constexpr bool operator OP (const ID& b) const {\
+    return id OP b.id;\
+  }
+
+  COMP_OP(==)
+  COMP_OP(!=)
+  COMP_OP(>)
+  COMP_OP(<)
+  COMP_OP(>=)
+  COMP_OP(<=)
+
+#undef COMP_OP
+
+  friend std::string tostr(ID id);
+};
+
+inline std::string tostr(ID id){
+  return tostr((void*)id.id);
+}
+
+consteval ID operator ""_id (const char* ptr,size_t size){
+  return ID(ptr);
+}

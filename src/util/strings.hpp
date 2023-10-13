@@ -1,9 +1,11 @@
 #pragma once
 #include <concepts>
+#include <cstdint>
 #include <string>
 #include <iostream>
 #include <cinttypes>
 #include <cstdlib>
+#include "meta.hpp"
 
 typedef unsigned char uchar;
 
@@ -12,8 +14,10 @@ typedef const char* const_cstr_t;
 typedef char* cstr_t;
 
 
-
 inline string tostr(string& a){
+  return a;
+}
+inline string tostr(const string& a){
   return a;
 }
 
@@ -88,16 +92,15 @@ inline string hexstr(void* p){
 
 
 
-template<typename T>
-string tostr(T* a){
+inline string tostr(void* a){
   return hexstr((uint64_t)a);
 };
 
-template <> inline string tostr(const char* a){
+inline string tostr(const char* a){
   return string(a);
 }
 
-template <> inline string tostr(char* a){
+inline string tostr(char* a){
   return string(a);
 }
 
@@ -160,4 +163,21 @@ inline void print_loadbar(double completion){
   out+="]\r";
   std::cout<<out;
   std::cout.flush();
+}
+
+
+#define _MEM_TO_STRING(NAME) \
+if constexpr (std::is_same<decltype(s.NAME),string>::value || std::is_same<decltype(s.NAME),const char*>::value){\
+  ret+= "  " #NAME ":\t\"" + tostr(s.NAME) + "\"\n";\
+}else{\
+  ret+= "  " #NAME ":\t" + tostr(s.NAME) + "\n";\
+}
+
+//creates a tostr() for a struct, used in form STRUCT_TO_STRING(myClass,mem1,mem2,mem3)
+#define STRUCT_TO_STRING(STRUCT,...)\
+inline string tostr(const STRUCT& s){\
+  string ret = #STRUCT "{\n";\
+  FOR_EACH(_MEM_TO_STRING,__VA_ARGS__)\
+  ret += "}";\
+  return ret;\
 }

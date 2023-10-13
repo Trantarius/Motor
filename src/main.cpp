@@ -11,6 +11,8 @@
 #include "Updater.hpp"
 #include "OrbitCamera.hpp"
 #include "util/rand.hpp"
+#include "util/id.hpp"
+#include "Texture.hpp"
 
 Window* Main::window=nullptr;
 Render* Main::render=nullptr;
@@ -32,14 +34,22 @@ int _main(){
 
   Main::input->setCursorMode(Input::DISABLED);
 
-  Shader shader("src/shaders/mesh.vert","src/shaders/normals.frag");
-  MeshData suzanne = MeshData::readOBJ("assets/suzanne.obj");
+  Shader shader("src/shaders/mesh.v.glsl","src/shaders/tex.f.glsl");
+  MeshData suzanne = MeshData::readOBJ("assets/cube.obj");
   MeshData triangle = MeshData(Bloc<fvec3>(fvec3(-0.5,-0.5,-1),fvec3(0,0.5,-1),fvec3(0.5,-0.5,-1)));
 
   Mesh mesh;
   mesh.mesh_data=suzanne;
   mesh.shader=shader;
   Main::render->add(mesh);
+
+  Texture tex=Texture::readPNG("assets/awesomeface.png");
+  shader.setUniform("tex"_id,tex);
+
+  Array<Shader::UniformInfo> unis=shader.getUniforms();
+  for(Shader::UniformInfo& uni : unis){
+    print(uni);
+  }
 
   mainLoop();
   return 0;

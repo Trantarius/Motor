@@ -5,6 +5,9 @@
 #include <unordered_set>
 #include "Bloc.hpp"
 
+template<typename L,typename R>
+using Pair=std::pair<L,R>;
+
 template<typename T>
 using Array = std::vector<T>;
 

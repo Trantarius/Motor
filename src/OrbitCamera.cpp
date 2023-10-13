@@ -8,11 +8,11 @@ void OrbitCamera::update(Updater* upd){
 
   dvec2 theta=mrel*speed;
 
-  dquat yrot=quat(dvec3(0,1,0),theta.x);
+  dquat yrot=quat(dvec3(0,1,0),-theta.x);
 
   rotation=quatMul(yrot,rotation);
 
-  dquat xrot=quat(quatRot(rotation,fvec3(1,0,0)),theta.y);
+  dquat xrot=quat(quatRot(rotation,fvec3(1,0,0)),-theta.y);
   rotation=quatMul(xrot,rotation);
 }
 
