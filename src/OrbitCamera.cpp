@@ -1,5 +1,6 @@
 #include "OrbitCamera.hpp"
-#include "Input.hpp"
+#include "core/Input.hpp"
+#include "main.hpp"
 
 
 void OrbitCamera::update(Updater* upd){
@@ -18,9 +19,9 @@ void OrbitCamera::update(Updater* upd){
 
 fmat4 OrbitCamera::getView(Render*) const {
   fvec3 offset=quatRot(rotation,fvec3(0,0,orbit_distance));
-  fmat4 tform=transform.toMatrix();
-  tform=translate(tform,offset);
-  return inverse(tform);
+  Transform tform=transform;
+  tform.translate(offset);
+  return tform.toInvMatrix();
 }
 
 void OrbitCamera::onEscapePress(){
@@ -28,9 +29,9 @@ void OrbitCamera::onEscapePress(){
 }
 
 OrbitCamera::OrbitCamera(){
-  Main::input->addKeypressListener(Key::ESCAPE,SafeCall(this,&OrbitCamera::onEscapePress));
+  Main::input->addKeypressListener(Key::ESCAPE,SafeFunc<void()>(this,&OrbitCamera::onEscapePress));
 }
 
 OrbitCamera::~OrbitCamera(){
-  Main::input->removeKeypressListener(Key::ESCAPE,SafeCall(this,&OrbitCamera::onEscapePress));
+  Main::input->removeKeypressListener(Key::ESCAPE,SafeFunc<void()>(this,&OrbitCamera::onEscapePress));
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "util/collections.hpp"
-#include "util/strings.hpp"
+#include <string>
+using std::string;
 
 enum Key{
  UNKNOWN=-1,

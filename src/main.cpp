@@ -1,19 +1,19 @@
 #include <iostream>
 #include <stdexcept>
 #include "main.hpp"
+#include "util/print.hpp"
+#include "util/strings.hpp"
 #include "util/math.hpp"
-#include "Render.hpp"
-#include "Mesh.hpp"
-#include "util/gl_enum_names.hpp"
-#include "Input.hpp"
-#include "Window.hpp"
-#include <chrono>
-#include "Updater.hpp"
+#include "core/Render.hpp"
+#include "core/Mesh.hpp"
+#include "defs/gl_defs.hpp"
+#include "core/Input.hpp"
+#include "core/Window.hpp"
+#include "core/Updater.hpp"
 #include "OrbitCamera.hpp"
 #include "util/rand.hpp"
 #include "util/id.hpp"
-#include "Texture.hpp"
-#include "util/strings.hpp"
+#include "core/Texture.hpp"
 
 Window* Main::window=nullptr;
 Render* Main::render=nullptr;
@@ -166,20 +166,6 @@ void terminate(){
 
 
 
-const std::chrono::steady_clock::time_point engine_start_time = std::chrono::steady_clock::now();
-double time(){
-  auto now=std::chrono::steady_clock::now();
-  std::chrono::duration<double> ret = now - engine_start_time;
-  return ret.count();
-}
-
-uint64_t nanotime(){
-  assert(std::chrono::steady_clock::period::den>=1000000000);
-  auto now=std::chrono::steady_clock::now();
-  std::chrono::steady_clock::duration diff = now - engine_start_time;
-  std::chrono::nanoseconds ret = std::chrono::duration_cast<std::chrono::nanoseconds>(diff);
-  return ret.count();
-}
 
 //https://stackoverflow.com/questions/3596781/how-to-detect-if-the-current-process-is-being-run-by-gdb
 #include <sys/stat.h>

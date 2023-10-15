@@ -1,7 +1,8 @@
 #pragma once
-#include "main.hpp"
 #include "Render.hpp"
 #include "Input.hpp"
+
+struct GLFWwindow;
 
 class Window{
   static Map<GLFWwindow*,Window*> ptr_map;

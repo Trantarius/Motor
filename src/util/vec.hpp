@@ -1,8 +1,11 @@
 #pragma once
-#include "strings.hpp"
 #include "bits.hpp"
-#include <cstring>
+#include <string>
 #include <cmath>
+#include <cstring>
+#include "meta.hpp"
+#include "strings.hpp"
+using std::string;
 
 #define VEC_CLASS(N) \
 T& operator[](int n){\
@@ -183,7 +186,7 @@ VEC_UN_OP(~)
 
 #undef VEC_UN_OP
 
-template<Printable T,int N>
+template<typename T,int N>
 string tostr(const vec<T,N>& v){
   std::string str="["+tostr(v.data[0]);
   for(int n=1;n<N;n++){

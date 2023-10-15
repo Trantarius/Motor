@@ -1,9 +1,13 @@
-
 #pragma once
 #include <cstdio>
 #include <stdexcept>
 #include "Bloc.hpp"
 using std::string;
+
+struct IOError : public std::runtime_error{
+  string file;
+  IOError(string what,string file=""):std::runtime_error(what+" (for file "+file+")"),file(file){}
+};
 
 inline Bloc<char> readfile(string path){
   FILE* file = fopen(path.c_str(),"rb");

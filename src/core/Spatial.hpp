@@ -1,4 +1,5 @@
 #pragma once
+#include "util/strings.hpp"
 #include "util/math.hpp"
 
 struct Transform{

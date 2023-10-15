@@ -3,7 +3,6 @@
 #include <list>
 #include <unordered_map>
 #include <unordered_set>
-#include "Bloc.hpp"
 
 template<typename L,typename R>
 using Pair=std::pair<L,R>;

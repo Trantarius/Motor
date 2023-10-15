@@ -1,14 +1,15 @@
 #pragma once
 #include <string>
 #include <stdexcept>
-#include "util/math.hpp"
+#include "util/mat.hpp"
 #include "util/id.hpp"
 #include "util/collections.hpp"
-#include "util/gl_enum_names.hpp"
-#include "Texture.hpp"
+#include "defs/gl_defs.hpp"
 #include "util/strings.hpp"
-#include "util/mem.hpp"
+#include "util/refcount.hpp"
+#include "util/Bloc.hpp"
 
+class Texture;
 
 struct UniformBlockMember{
   ID id;

@@ -5,12 +5,12 @@
 #include "util/id.hpp"
 #include "util/stb_image.h"
 
-IndexDistributor* unitcounter=nullptr;
+//OpenGL spec demands at least 48
+IndexDistributor unitcounter(48);
 
 void Texture::onDestroy(){
   glDeleteTextures(1,&data->texture);
-  assert(unitcounter!=nullptr);
-  unitcounter->releaseIndex(data->unit);
+  unitcounter.releaseIndex(data->unit);
 }
 
 template<NumberType T>
@@ -31,12 +31,7 @@ Texture::Texture(ivec3 size, int channel_count, T* texdata):Texture(){
     data->type=GL_TEXTURE_3D;
   }
 
-  if(unitcounter==nullptr){
-    int max_units;
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,&max_units);
-    unitcounter=new IndexDistributor(max_units);
-  }
-  data->unit=unitcounter->takeIndex();
+  data->unit=unitcounter.takeIndex();
   glActiveTexture(GL_TEXTURE0+data->unit);
   glBindTexture(data->type,data->texture);
 

@@ -1,6 +1,6 @@
 #pragma once
-#include "Render.hpp"
-#include "Updater.hpp"
+#include "core/Render.hpp"
+#include "core/Updater.hpp"
 
 class OrbitCamera : public Updatable, public PerspectiveCamera{
   void onEscapePress();

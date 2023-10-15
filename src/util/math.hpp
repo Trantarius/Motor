@@ -9,6 +9,7 @@ using std::max;
 
 constexpr double PI=3.1415926535897932384626433832795028841971693993751058;
 
+/*
 template<typename T>
 inline mat<T,3> rotationMtx(vec<T,3> axis,T theta){
   //https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
@@ -28,3 +29,4 @@ inline fmat4 translate(fmat4 tform,fvec3 delta){
   tform[2][3]+=delta.z;
   return tform;
 }
+*/

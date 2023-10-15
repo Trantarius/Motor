@@ -1,7 +1,5 @@
 #pragma once
 #include <cassert>
-#include <cstring>
-#include <array>
 #include "vec.hpp"
 
 //NB: this is row major
@@ -106,7 +104,7 @@ MAT_EQ_OP(+);
 
 #undef MAT_EQ_OP
 
-template<Printable T,int N>
+template<typename T,int N>
 string tostr(const mat<T,N>& mtx){
   string ret;
   for(int n=0;n<N;n++){
@@ -127,7 +125,7 @@ mat<T,N> transpose(mat<T,N> mtx){
   return ret;
 }
 
-template<typename T>
+template<NumberType T>
 mat<T,2> inverse(const mat<T,2>& mtx){
   T det=1.0/(mtx[0][0]*mtx[1][1]-mtx[0][1]*mtx[1][0]);
   return mat<T,2>(
@@ -136,7 +134,7 @@ mat<T,2> inverse(const mat<T,2>& mtx){
   );
 }
 
-template<typename T>
+template<NumberType T>
 mat<T,3> inverse(const mat<T,3>& mtx){
 
   mat<T,3> ret;
@@ -171,7 +169,7 @@ mat<T,3> inverse(const mat<T,3>& mtx){
   return ret;
 }
 
-template<typename T>
+template<NumberType T>
 mat<T,4> inverse(const mat<T,4>& mtx){
 
   mat<T,4> ret;

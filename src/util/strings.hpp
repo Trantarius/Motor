@@ -1,24 +1,23 @@
 #pragma once
-#include <concepts>
-#include <cstdint>
 #include <string>
-#include <iostream>
-#include <cinttypes>
-#include <cstdlib>
 #include "meta.hpp"
 
 typedef unsigned char uchar;
-
 using std::string;
-typedef const char* const_cstr_t;
-typedef char* cstr_t;
-
 
 inline string tostr(string& a){
   return a;
 }
 inline string tostr(const string& a){
   return a;
+}
+
+inline string tostr(const char* a){
+  return string(a);
+}
+
+inline string tostr(char* a){
+  return string(a);
 }
 
 //casts to int first to force the char to print as a number
@@ -42,8 +41,6 @@ STD(long)   STD(ulong)
 STD(float)  STD(double)
 
 #undef STD
-
-
 
 
 
@@ -96,100 +93,14 @@ inline string tostr(void* a){
   return hexstr((uint64_t)a);
 };
 
-inline string tostr(const char* a){
-  return string(a);
-}
 
-inline string tostr(char* a){
-  return string(a);
-}
-
-
-template<typename T>
-concept Printable = requires(T a){
-  {tostr(a)}->std::same_as<string>;
-};
-
-template<Printable...Ts>
-void print(Ts...args){
-  (std::cout<<...<<tostr(args))<<std::endl;
-}
-
-inline bool setgetPrintColor(int set=-1){
-  static bool enableColor=false;
-  if(set==0){
-    enableColor=false;
-  }
-  if(set==1){
-    enableColor=true;
-  }
-  return enableColor;
-}
-
-
-template<Printable...Ts>
-void printerr(Ts...args){
-  if(setgetPrintColor()){
-    std::cerr<<"\033[91m";//set color to red
-  }
-  (std::cerr<<...<<tostr(args));
-  if(setgetPrintColor()){
-    std::cerr<<"\033[0m";//reset
-  }
-  std::cerr<<std::endl;
-}
-
-template<Printable...Ts>
-void print_(Ts...args){
-  (std::cout<<...<<(tostr(args)+" "))<<std::endl;
-}
-
-template<Printable T>
-void _printsep(string& sep,T arg){
-  std::cout<<tostr(arg)<<std::endl;
-}
-
-template<Printable T,Printable T2,Printable...Ts>
-void _printsep(string& sep,T arg,T2 arg2,Ts...args){
-  std::cout<<tostr(arg)<<sep;
-  _printsep(sep,arg2,args...);
-}
-
-template<Printable...Ts>
-void printsep(string sep,Ts...args){
-  _printsep(sep,args...);
-}
-
-template<Printable...Ts>
-void printw(size_t width,Ts...args){
-  static auto ensurewidth=[](size_t width,string s)->string{
-    s.resize(width,' ');
-    return s;
-  };
-  (std::cout<<...<<ensurewidth(width,tostr(args)))<<std::endl;
-}
-
-inline void print_loadbar(double completion){
-  string out="\r[";
-  int total_length=64;
-  int filled=total_length*completion;
-  for(int n=0;n<filled;n++){
-    out+='#';
-  }
-  for(int n=0;n<total_length-filled;n++){
-    out+=' ';
-  }
-  out+="]\r";
-  std::cout<<out;
-  std::cout.flush();
-}
 
 template<typename T>
 concept StructToStringAble = requires(T a,string b){
   {structToString(a,b)}->std::same_as<string>;
 };
 
-template<Printable T> requires (!StructToStringAble<T>) && (!std::convertible_to<T,string>)
+template<typename T> requires (!StructToStringAble<T>) && (!std::convertible_to<T,string>)
 string _structToStringEntry(string name,const T& val,string tab){
   return tab + name + ":  " + tostr(val) + "\n";
 }

@@ -3,8 +3,6 @@
 #include <GLFW/glfw3.h>
 
 void quit();
-double time();
-uint64_t nanotime();
 
 class Input;
 class Render;

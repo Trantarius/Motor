@@ -1,7 +1,7 @@
 #include "Mesh.hpp"
 #include "main.hpp"
 #include "util/io.hpp"
-#include "util/gl_enum_names.hpp"
+#include "defs/gl_defs.hpp"
 #include <map>
 
 MeshData::MeshData(Bloc<fvec3> verts):MeshData(_ref_count_init()){
@@ -220,8 +220,7 @@ MeshData MeshData::readOBJ(string path){
         continue;
       }
       if(words.size()>4){
-        printerr("Non-triangular face in ",path);
-        continue;
+        throw IOError("Non-triangular face",path);
       }
 
       Array<ivec3> face;
@@ -235,8 +234,7 @@ MeshData MeshData::readOBJ(string path){
         else if(slash_count==1){
           Array<string> pts=splitString(words[c],"/");
           if(pts.size()!=2){
-            printerr("Bad format (1) found in ",path);
-            return MeshData();
+            throw IOError("Bad format (OBJ)",path);
           }
           corner.x=stol(pts[0])-1;
           corner.y=stol(pts[1])-1;
@@ -244,8 +242,7 @@ MeshData MeshData::readOBJ(string path){
         else if(slash_count==2){
           Array<string> pts=splitString(words[c],"/");
           if(pts.size()<2){
-            printerr("Bad format (2) found in ",path);
-            return MeshData();
+            throw IOError("Bad format (OBJ)",path);
           }
           if(pts.size()==2){
             corner.x=stol(pts[0])-1;
@@ -257,13 +254,11 @@ MeshData MeshData::readOBJ(string path){
             corner.z=stol(pts[2])-1;
           }
           else{
-            printerr("Bad format (3) found in ",path);
-            return MeshData();
+            throw IOError("Bad format (OBJ)",path);
           }
         }
         else{
-          printerr("Bad format (4) found in ",path);
-          return MeshData();
+          throw IOError("Bad format (OBJ)",path);
         }
 
         face.push_back(corner);
@@ -278,8 +273,7 @@ MeshData MeshData::readOBJ(string path){
   for(Array<ivec3>& face : faces){
     ivec3 element;
     if(face.size()!=3){
-      printerr("Non triangular face found in ",path);
-      continue;
+      throw IOError("Non triangular face",path);
     }
     for(int c=0;c<face.size();c++){
       if(cornermap.contains(face[c])){
@@ -305,8 +299,7 @@ MeshData MeshData::readOBJ(string path){
     has_color=true;
   }
   else{
-    printerr("Bad format (5) found in ",path);
-    return MeshData();
+    throw IOError("Bad format (OBJ)",path);
   }
 
   Array<uint> attribute_widths;
@@ -343,8 +336,7 @@ MeshData MeshData::readOBJ(string path){
 
     if(has_uv){
       if(pr.first.y<0||pr.first.y>=uvs.size()){
-        printerr("Bad format (6) found in ",path);
-        return MeshData();
+        throw IOError("Bad format (OBJ)",path);
       }
       fvec2 uv=uvs[pr.first.y];
       vdata[idx++]=uv.x;
@@ -353,8 +345,7 @@ MeshData MeshData::readOBJ(string path){
 
     if(has_normal){
       if(pr.first.z<0||pr.first.z>=norms.size()){
-        printerr("Bad format (7) found in ",path);
-        return MeshData();
+        throw IOError("Bad format (OBJ)",path);
       }
       fvec3 norm=norms[pr.first.z];
       vdata[idx++]=norm.x;

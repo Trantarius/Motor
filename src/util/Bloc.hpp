@@ -45,6 +45,13 @@ struct Bloc{
     return ptr==nullptr;
   }
 
+  Bloc operator+(int i) const {
+    return Bloc(ptr+i,size-i);
+  }
+  Bloc operator-(int i) const {
+    return *this+-i;
+  }
+
   void destroy(){
     assert(ptr!=nullptr);
     delete [] ptr;

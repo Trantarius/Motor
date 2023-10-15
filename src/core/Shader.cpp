@@ -1,8 +1,9 @@
 #include "Shader.hpp"
+#include <filesystem>
 #include "main.hpp"
 #include "util/io.hpp"
-#include "util/gl_enum_names.hpp"
-#include <filesystem>
+#include "defs/gl_defs.hpp"
+#include "Texture.hpp"
 
 namespace fs = std::filesystem;
 
@@ -157,6 +158,7 @@ Shader::Shader(string vertex_shader_file,string fragment_shader_file):Shader(_re
     data->uniforms[uinf.id]=uinf;
   }
   delete [] uniform_checklist;
+  checkGLError();
 }
 
 void Shader::onDestroy(){
@@ -176,12 +178,12 @@ void Shader::loadAllShaderFiles(string path){
     }
     string epath_str=epath;
     epath_str=epath_str.substr(path.size());
-    print(epath_str);
 
     Bloc<char> content=readfile(epath);
     glNamedStringARB(GL_SHADER_INCLUDE_ARB,epath_str.size(),epath_str.c_str(),content.size,content.ptr);
     content.destroy();
   }
+  checkGLError();
 }
 
 void Shader::setUniformBlock(ID name, UniformBuffer buffer){
@@ -191,6 +193,7 @@ void Shader::setUniformBlock(ID name, UniformBuffer buffer){
   UniformBlock& block=data->uniform_blocks[name];
   assert(buffer.data->block.id==block.id);
   glUniformBlockBinding(data->gl_program,block.index,buffer.data->binding);
+  checkGLError();
 }
 
 

@@ -1,10 +1,9 @@
 #pragma once
-#include "util/strings.hpp"
-#include "keys.hpp"
-#include "util/math.hpp"
-#include "util/funcy.hpp"
-#include "main.hpp"
+#include "defs/keys.hpp"
+#include "util/vec.hpp"
+#include "util/Cycle.hpp"
 
+struct GLFWwindow;
 class Window;
 
 class Input{

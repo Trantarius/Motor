@@ -1,6 +1,7 @@
 #pragma once
 #include "Spatial.hpp"
-#include "util/mem.hpp"
+#include "util/MemSafe.hpp"
+#include "util/strings.hpp"
 
 struct Light : public virtual Spatial, public virtual MemSafe{
   /*

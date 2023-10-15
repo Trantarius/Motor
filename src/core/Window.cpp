@@ -1,5 +1,5 @@
 #include "Window.hpp"
-#include "GLFW/glfw3.h"
+#include "main.hpp"
 
 Map<GLFWwindow*,Window*> Window::ptr_map;
 

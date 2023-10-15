@@ -1,9 +1,8 @@
 #pragma once
 #include <cstdlib>
-#include "util/meta.hpp"
 #include "util/vec.hpp"
-#include "util/gl_enum_names.hpp"
-#include "util/mem.hpp"
+#include "defs/gl_defs.hpp"
+#include "util/refcount.hpp"
 
 class Texture{
 public:

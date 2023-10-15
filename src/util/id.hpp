@@ -1,6 +1,6 @@
 #pragma once
 #include <cinttypes>
-#include "strings.hpp"
+#include <cstdlib>
 
 constexpr uint64_t const_hash(const char* ptr){
   uint64_t ret=0;
@@ -22,16 +22,16 @@ public:
   constexpr ID(const char* str):id(const_hash(str)){}
 
   constexpr operator uint64_t() const {return id;}
-  constexpr operator int64_t() const {return id;}
+  explicit constexpr operator int64_t() const {return id;}
 
-  constexpr operator uint32_t() const {return id ^ id>>32;}
-  constexpr operator int32_t() const {return id ^ id>>32;}
+  explicit constexpr operator uint32_t() const {return id ^ id>>32;}
+  explicit constexpr operator int32_t() const {return id ^ id>>32;}
 
-  constexpr operator uint16_t() const {return operator uint32_t() ^ operator uint32_t() >>16;}
-  constexpr operator int16_t() const {return operator uint32_t() ^ operator uint32_t() >>16;}
+  explicit constexpr operator uint16_t() const {return operator uint32_t() ^ operator uint32_t() >>16;}
+  explicit constexpr operator int16_t() const {return operator uint32_t() ^ operator uint32_t() >>16;}
 
-  constexpr operator uint8_t() const {return operator uint16_t() ^ operator uint16_t() >>8;}
-  constexpr operator int8_t() const {return operator uint16_t() ^ operator uint16_t() >>8;}
+  explicit constexpr operator uint8_t() const {return operator uint16_t() ^ operator uint16_t() >>8;}
+  explicit constexpr operator int8_t() const {return operator uint16_t() ^ operator uint16_t() >>8;}
 
   struct Hash{
     constexpr uint64_t operator ()(const ID& id) const {
@@ -53,12 +53,7 @@ public:
 
 #undef COMP_OP
 
-  friend std::string tostr(ID id);
 };
-
-inline std::string tostr(ID id){
-  return tostr((void*)id.id);
-}
 
 consteval ID operator ""_id (const char* ptr,size_t size){
   return ID(ptr);

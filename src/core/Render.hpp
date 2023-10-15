@@ -1,10 +1,8 @@
 #pragma once
 #include "util/collections.hpp"
-#include "util/math.hpp"
-#include "util/funcy.hpp"
+#include "util/mat.hpp"
 #include "Spatial.hpp"
-#include "util/mem.hpp"
-#include "Cycle.hpp"
+#include "util/Cycle.hpp"
 #include "Light.hpp"
 #include "Shader.hpp"
 

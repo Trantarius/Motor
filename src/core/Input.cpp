@@ -1,6 +1,7 @@
 #include "Input.hpp"
 #include "main.hpp"
 #include "Window.hpp"
+#include "util/time.hpp"
 
 string Input::keyName(Key key){
   return keyNames.at(key);

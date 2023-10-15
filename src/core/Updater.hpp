@@ -1,5 +1,5 @@
 #pragma once
-#include "Cycle.hpp"
+#include "util/TimedCycle.hpp"
 
 class Updater;
 
@@ -10,4 +10,4 @@ public:
   friend class Updater;
 };
 
-struct Updater : public STATIC_CYCLE(&Updatable::update), public virtual TimedCycle<void(Updater*)>{};
+struct Updater : public virtual STATIC_CYCLE(&Updatable::update), public virtual TimedCycle<void(Updater*)>{};

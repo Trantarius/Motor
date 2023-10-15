@@ -1,9 +1,7 @@
-#include "gl_enum_names.hpp"
+#include "gl_defs.hpp"
 #include <map>
 #include <string>
-#include "collections.hpp"
-#include "strings.hpp"
-#include "vec.hpp"
+#include "util/collections.hpp"
 using namespace std;
 
 multimap<long,string> _make_map();

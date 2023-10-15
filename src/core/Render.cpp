@@ -1,5 +1,6 @@
 #include "Render.hpp"
 #include "Window.hpp"
+#include "main.hpp"
 
 
 void Render::preCycle(){
@@ -46,7 +47,7 @@ void Render::preCycle(){
 }
 
 Render::Render(){
-  addPreCycle(SafeCall(this,&Render::preCycle));
+  addPreCycle(SafeFunc<void()>(this,&Render::preCycle));
   Shader shader("/mesh.v.glsl","/lighttest.f.glsl");
   UniformBlock block=shader.getUniformBlock("LightBlock"_id);
   _light_buffer=UniformBuffer(block);
