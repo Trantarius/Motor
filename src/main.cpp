@@ -13,6 +13,7 @@
 #include "util/rand.hpp"
 #include "util/id.hpp"
 #include "Texture.hpp"
+#include "util/strings.hpp"
 
 Window* Main::window=nullptr;
 Render* Main::render=nullptr;
@@ -24,18 +25,22 @@ void init();
 void mainLoop();
 void terminate();
 
+bool debuggerIsAttached();
+
 uint64_t nt = nanotime();
 int _main(){
+
+  if(!debuggerIsAttached()){
+    Main::input->setCursorMode(Input::DISABLED);
+  }
 
   OrbitCamera* camera=new OrbitCamera();
   Main::render->camera=Unique<Camera>(camera);
   Main::render->camera->renderer=Main::render;
   Main::updater->add(*camera);
 
-  Main::input->setCursorMode(Input::DISABLED);
-
-  Shader shader("src/shaders/mesh.v.glsl","src/shaders/tex.f.glsl");
-  MeshData suzanne = MeshData::readOBJ("assets/cube.obj");
+  Shader shader("/mesh.v.glsl","/lighttest.f.glsl");
+  MeshData suzanne = MeshData::readOBJ("assets/suzanne.obj");
   MeshData triangle = MeshData(Bloc<fvec3>(fvec3(-0.5,-0.5,-1),fvec3(0,0.5,-1),fvec3(0.5,-0.5,-1)));
 
   Mesh mesh;
@@ -43,19 +48,22 @@ int _main(){
   mesh.shader=shader;
   Main::render->add(mesh);
 
-  Texture tex=Texture::readPNG("assets/awesomeface.png");
-  shader.setUniform("tex"_id,tex);
-
-  Array<Shader::UniformInfo> unis=shader.getUniforms();
-  for(Shader::UniformInfo& uni : unis){
-    print(uni);
-  }
+  Light light;
+  light.type=Light::POINT;
+  light.position=dvec3(1,1,1);
+  Main::render->addLight(light);
 
   mainLoop();
   return 0;
 }
 
 int main(){
+  if(debuggerIsAttached()){
+    setgetPrintColor(0);
+    print("Running inside GDB");
+  }else{
+    setgetPrintColor(1);
+  }
   init();
   int r=_main();
   terminate();
@@ -85,15 +93,12 @@ void init(){
     throw InitFailedError("glfwInit failed");
   }
 
-  Main::window=new Window();
-  Main::input=&Main::window->input;
-  Main::render=&Main::window->render;
-  Main::updater=new Updater();
+  GLFWwindow* winptr=Window::make_new_window();
 
-  glfwMakeContextCurrent(Main::window->glfw());
+  glfwMakeContextCurrent(winptr);
   glfwSwapInterval(1);//enable Vsync
   if(glfwRawMouseMotionSupported()){
-    glfwSetInputMode(Main::window->glfw(),GLFW_RAW_MOUSE_MOTION,GLFW_TRUE);
+    glfwSetInputMode(winptr,GLFW_RAW_MOUSE_MOTION,GLFW_TRUE);
   }
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -105,6 +110,13 @@ void init(){
   glDebugMessageCallback(openGLDebugCallback,NULL);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
+
+  Shader::loadAllShaderFiles("src/shaders");
+
+  Main::window=new Window(winptr);
+  Main::input=&Main::window->input;
+  Main::render=&Main::window->render;
+  Main::updater=new Updater();
 }
 
 
@@ -142,6 +154,10 @@ void quit(){
 }
 
 void terminate(){
+  //delete Main::updater;
+  //Main::updater=nullptr;
+  //delete Main::window;
+  //Main::window=nullptr;
   glfwTerminate();
 }
 
@@ -163,4 +179,41 @@ uint64_t nanotime(){
   std::chrono::steady_clock::duration diff = now - engine_start_time;
   std::chrono::nanoseconds ret = std::chrono::duration_cast<std::chrono::nanoseconds>(diff);
   return ret.count();
+}
+
+//https://stackoverflow.com/questions/3596781/how-to-detect-if-the-current-process-is-being-run-by-gdb
+#include <sys/stat.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <ctype.h>
+bool debuggerIsAttached()
+{
+    char buf[4096];
+
+    const int status_fd = open("/proc/self/status", O_RDONLY);
+    if (status_fd == -1)
+        return false;
+
+    const ssize_t num_read = read(status_fd, buf, sizeof(buf) - 1);
+    close(status_fd);
+
+    if (num_read <= 0)
+        return false;
+
+    buf[num_read] = '\0';
+    constexpr char tracerPidString[] = "TracerPid:";
+    const auto tracer_pid_ptr = strstr(buf, tracerPidString);
+    if (!tracer_pid_ptr)
+        return false;
+
+    for (const char* characterPtr = tracer_pid_ptr + sizeof(tracerPidString) - 1; characterPtr <= buf + num_read; ++characterPtr)
+    {
+        if (isspace(*characterPtr))
+            continue;
+        else
+            return isdigit(*characterPtr) != 0 && *characterPtr != '0';
+    }
+
+    return false;
 }

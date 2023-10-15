@@ -1,6 +1,7 @@
 #pragma once
 #include <cinttypes>
 #include <string>
+#include <stdexcept>
 
 struct glEnum{
   uint val=0;
@@ -19,10 +20,15 @@ inline std::string tostr(const glEnum& gle){
   return glEnumName(gle.val);
 }
 
+struct OpenGLError : public std::runtime_error{
+  glEnum err;
+  OpenGLError(std::string what,glEnum err):std::runtime_error(what),err(err){}
+};
+
 #define checkGLError() {\
 GLenum err=glGetError();\
 if(err!=GL_NO_ERROR){\
-  printerr("GL error: ",glEnumName(err));\
+  throw OpenGLError(std::string("GL error: ")+glEnumName(err)+" " __FILE__ ": " +tostr(__LINE__),err);\
 }\
 }
 

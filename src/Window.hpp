@@ -7,6 +7,8 @@ class Window{
   static Map<GLFWwindow*,Window*> ptr_map;
   GLFWwindow* window=nullptr;
 
+  static GLFWwindow* make_new_window();
+
 public:
 
   Input input{*this};
@@ -19,4 +21,7 @@ public:
   static Window* fromGLFW(GLFWwindow*ptr);
 
   Window();
+  Window(GLFWwindow*);
+
+  friend void init();
 };

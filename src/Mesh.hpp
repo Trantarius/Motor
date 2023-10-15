@@ -1,16 +1,16 @@
 #pragma once
 #include "Shader.hpp"
 #include "Render.hpp"
+#include "util/mem.hpp"
 
 class MeshData{
-  struct Info{
+  struct _Data{
     uint refcount=0;
     uint VAO=0,VBO=0,EBO=0;
     uint elemcount=0;
   };
-  Info* info=nullptr;
 
-  void dispose();
+  REF_COUNTER(MeshData,_Data)
 
 public:
 
@@ -19,14 +19,7 @@ public:
   MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths);
   MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths,Bloc<uint> elements);
 
-  MeshData(){}
-  MeshData(const MeshData& md){*this=md;}
-  ~MeshData();
-
-  void operator=(const MeshData& md);
-
   void draw(uint mode) const;
-  bool isNull() const;
 
   static MeshData readOBJ(string path);
 };

@@ -254,31 +254,31 @@ inline bool compare(ivec4 a,ivec4 b){
 
 
 
-template<typename T,int N>
-T dot(vec<T,N> a,vec<T,N> b){
-  T sum=0;
+template<NumberType A,NumberType B,int N>
+decltype(A()*B()) dot(vec<A,N> a,vec<B,N> b){
+  decltype(A()*B()) sum=0;
   for(int n=0;n<N;n++){
     sum+=a[n]*b[n];
   }
   return sum;
 }
 
-template<typename T,int N>
+template<NumberType T,int N>
 T lensqr(vec<T,N> v){
   return dot(v,v);
 }
 
-template<typename T,int N>
+template<NumberType T,int N>
 T len(vec<T,N> v){
   return sqrt(lensqr(v));
 }
 
-template<typename T>
-vec<T,3> cross(vec<T,3> a,vec<T,3> b){
-  return vec<T,3>(a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]);
+template<NumberType A,NumberType B>
+vec<decltype(A()*B()),3> cross(vec<A,3> a,vec<B,3> b){
+  return vec<decltype(A()*B()),3>(a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]);
 }
 
-template<typename T,int N>
+template<NumberType T,int N>
 vec<T,N> normalize(vec<T,N> v){
   return v/len(v);
 }

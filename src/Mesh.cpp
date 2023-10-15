@@ -4,47 +4,43 @@
 #include "util/gl_enum_names.hpp"
 #include <map>
 
-MeshData::MeshData(Bloc<fvec3> verts){
+MeshData::MeshData(Bloc<fvec3> verts):MeshData(_ref_count_init()){
   assert(verts.size%3==0);
-  info=new Info();
-  info->refcount=1;
-  glGenVertexArrays(1,&info->VAO);
-  glGenBuffers(1,&info->VBO);
+  glGenVertexArrays(1,&data->VAO);
+  glGenBuffers(1,&data->VBO);
 
-  glBindVertexArray(info->VAO);
+  glBindVertexArray(data->VAO);
 
-  glBindBuffer(GL_ARRAY_BUFFER, info->VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, data->VBO);
   glBufferData(GL_ARRAY_BUFFER,verts.size*sizeof(fvec3),verts,GL_STATIC_DRAW);
 
   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),0);
   glEnableVertexAttribArray(0);
 
   glBindVertexArray(0);
-  info->elemcount=verts.size;
+  data->elemcount=verts.size;
 }
 
-MeshData::MeshData(Bloc<fvec3> verts,Bloc<ivec3> faces){
-  info=new Info();
-  info->refcount=1;
-  glGenVertexArrays(1,&info->VAO);
-  glGenBuffers(1,&info->VBO);
-  glGenBuffers(1,&info->EBO);
+MeshData::MeshData(Bloc<fvec3> verts,Bloc<ivec3> faces):MeshData(_ref_count_init()){
+  glGenVertexArrays(1,&data->VAO);
+  glGenBuffers(1,&data->VBO);
+  glGenBuffers(1,&data->EBO);
 
-  glBindVertexArray(info->VAO);
+  glBindVertexArray(data->VAO);
 
-  glBindBuffer(GL_ARRAY_BUFFER, info->VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, data->VBO);
   glBufferData(GL_ARRAY_BUFFER,verts.size*sizeof(fvec3),verts,GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, info->EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.size*sizeof(ivec3),faces,GL_STATIC_DRAW);
 
   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),0);
   glEnableVertexAttribArray(0);
 
   glBindVertexArray(0);
-  info->elemcount=faces.size*3;
+  data->elemcount=faces.size*3;
 }
-MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths){
+MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths):MeshData(_ref_count_init()){
   int stride=0;
   for(int n=0;n<attribute_widths.size;n++){
     stride+=attribute_widths[n];
@@ -54,14 +50,12 @@ MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths){
   int vertcount=vdata.size/stride;
   assert(vertcount%3==0);
 
-  info=new Info();
-  info->refcount=1;
-  glGenVertexArrays(1,&info->VAO);
-  glGenBuffers(1,&info->VBO);
+  glGenVertexArrays(1,&data->VAO);
+  glGenBuffers(1,&data->VBO);
 
-  glBindVertexArray(info->VAO);
+  glBindVertexArray(data->VAO);
 
-  glBindBuffer(GL_ARRAY_BUFFER, info->VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, data->VBO);
   glBufferData(GL_ARRAY_BUFFER,vdata.size*sizeof(float),vdata,GL_STATIC_DRAW);
 
   int off=0;
@@ -73,9 +67,9 @@ MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths){
   }
 
   glBindVertexArray(0);
-  info->elemcount=vertcount;
+  data->elemcount=vertcount;
 }
-MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths,Bloc<uint> elements){
+MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths,Bloc<uint> elements):MeshData(_ref_count_init()){
 
   int stride=0;
   for(int n=0;n<attribute_widths.size;n++){
@@ -83,18 +77,16 @@ MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths,Bloc<uint> elem
   }
   assert(vdata.size%stride==0);
 
-  info=new Info();
-  info->refcount=1;
-  glGenVertexArrays(1,&info->VAO);
-  glGenBuffers(1,&info->VBO);
-  glGenBuffers(1,&info->EBO);
+  glGenVertexArrays(1,&data->VAO);
+  glGenBuffers(1,&data->VBO);
+  glGenBuffers(1,&data->EBO);
 
-  glBindVertexArray(info->VAO);
+  glBindVertexArray(data->VAO);
 
-  glBindBuffer(GL_ARRAY_BUFFER, info->VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, data->VBO);
   glBufferData(GL_ARRAY_BUFFER,vdata.size*sizeof(float),vdata,GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, info->EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements.size*sizeof(uint),elements,GL_STATIC_DRAW);
 
   int off=0;
@@ -106,62 +98,39 @@ MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths,Bloc<uint> elem
   }
 
   glBindVertexArray(0);
-  info->elemcount=elements.size;
+  data->elemcount=elements.size;
 }
 
 
-void MeshData::dispose(){
-  assert(info!=nullptr);
-  glDeleteBuffers(1,&info->VBO);
-  glDeleteBuffers(1,&info->EBO);
-  glDeleteVertexArrays(1,&info->VAO);
-  delete info;
-  info=nullptr;
-}
-
-MeshData::~MeshData(){
-  info->refcount--;
-  if(info->refcount==0){
-    dispose();
-  }
-}
-
-void MeshData::operator=(const MeshData& md){
-  if(info!=nullptr){
-    info->refcount--;
-    if(info->refcount==0){
-      dispose();
-    }
-  }
-
-  info=md.info;
-  if(info!=nullptr){
-    info->refcount++;
-  }
+void MeshData::onDestroy(){
+  glDeleteBuffers(1,&data->VBO);
+  glDeleteBuffers(1,&data->EBO);
+  glDeleteVertexArrays(1,&data->VAO);
 }
 
 void MeshData::draw(uint mode) const {
-  assert(info!=nullptr);
-  glBindVertexArray(info->VAO);
-  if(info->EBO==0){
-    glDrawArrays(mode,0,info->elemcount);
+  assert(data!=nullptr);
+  glBindVertexArray(data->VAO);
+  if(data->EBO==0){
+    glDrawArrays(mode,0,data->elemcount);
   }else{
-    glDrawElements(mode,info->elemcount,GL_UNSIGNED_INT,0);
+    glDrawElements(mode,data->elemcount,GL_UNSIGNED_INT,0);
   }
   glBindVertexArray(0);
   checkGLError();
 }
 
-bool MeshData::isNull() const {
-  return info==nullptr;
-}
-
 void Mesh::render(Render* renderer){
   if(!shader.isNull() && !mesh_data.isNull()){
     shader.use();
-    shader.setUniform("model",(fmat4)transform.toMatrix());
-    shader.setUniform("view",(fmat4)renderer->view);
-    shader.setUniform("projection",(fmat4)renderer->projection);
+    shader.setUniform("model"_id,(fmat4)transform.toMatrix());
+    shader.setUniform("view"_id,(fmat4)renderer->view);
+    shader.setUniform("projection"_id,(fmat4)renderer->projection);
+
+    if(shader.hasUniformBlock("LightBlock"_id)){
+      shader.setUniformBlock("LightBlock"_id,renderer->light_buffer);
+    }
+
     mesh_data.draw(GL_TRIANGLES);
   }
 }

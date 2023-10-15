@@ -18,7 +18,7 @@ void framebufferResizeCallback(GLFWwindow* window, int width, int height){
   glViewport(0,0,width,height);
 }
 
-GLFWwindow* make_new_window(){
+GLFWwindow* Window::make_new_window(){
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -30,6 +30,11 @@ GLFWwindow* make_new_window(){
 }
 
 Window::Window():window(make_new_window()){
+  assert(window);
+  glfwSetFramebufferSizeCallback(window,framebufferResizeCallback);
+  ptr_map[window]=this;
+}
+Window::Window(GLFWwindow* win):window(win){
   assert(window);
   glfwSetFramebufferSizeCallback(window,framebufferResizeCallback);
   ptr_map[window]=this;

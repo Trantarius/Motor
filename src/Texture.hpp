@@ -3,6 +3,7 @@
 #include "util/meta.hpp"
 #include "util/vec.hpp"
 #include "util/gl_enum_names.hpp"
+#include "util/mem.hpp"
 
 class Texture{
 public:
@@ -10,7 +11,7 @@ public:
   enum Wrap{REPEAT=GL_REPEAT,MIRROR=GL_MIRRORED_REPEAT,CLAMP=GL_CLAMP_TO_EDGE};
 
 private:
-  struct Info{
+  struct _Data{
     uint refcount=0;
 
     glEnum texture=0;
@@ -23,21 +24,14 @@ private:
     Filter filter=LINEAR;
     Wrap wrap=REPEAT;
   };
-  Info* info=nullptr;
-  void dispose();
+
+  REF_COUNTER(Texture,_Data)
 
 public:
 
   template<NumberType T>
-  Texture(ivec3 size, int channel_count, T* data);
+  Texture(ivec3 size, int channel_count, T* texdata);
 
-  Texture(){}
-  Texture(const Texture& b){*this=b;}
-  ~Texture();
-
-  void operator=(const Texture& b);
-
-  bool isNull() const;
   void setFilter(Filter filter);
   Filter getFilter() const;
   void setWrap(Wrap wrap);

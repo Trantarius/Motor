@@ -63,3 +63,35 @@ inline std::string tostr(ID id){
 consteval ID operator ""_id (const char* ptr,size_t size){
   return ID(ptr);
 }
+
+
+
+class IndexDistributor{
+  int* stack;
+  int top;
+public:
+  const int max;
+
+  IndexDistributor(int max):max(max){
+    top=max-1;
+    stack=new int[max];
+    for(int n=0;n<max;n++){
+      stack[n]=top-n;
+    }
+  }
+
+  int takeIndex(){
+    if(top<0){
+      return -1;
+    }
+    return stack[top--];
+  }
+
+  void releaseIndex(int unit){
+    stack[++top]=unit;
+  }
+
+  ~IndexDistributor(){
+    delete [] stack;
+  }
+};

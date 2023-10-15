@@ -18,6 +18,5 @@ void main()
     Vertex = viewPos;
     Normal = normalize(mat3(view) * mat3(model) * aNorm);
     UV = aUV;
-    //Color = aColor;
     gl_Position = projection * vec4(viewPos,1);
 }

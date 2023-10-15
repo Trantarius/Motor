@@ -1,9 +1,33 @@
 #include "Spatial.hpp"
 
 
+Transform Transform::inverse() const{
+  Transform b;
+  b.scale=1/scale;
+  b.rotation=quatConj(rotation);
+  b.position=-quatRot(b.rotation,position*b.scale);
+  return b;
+}
 
 dvec3 Transform::operator*(const dvec3& v) const {
   return quatRot(rotation,scale*v)+position;
+}
+
+Transform Transform::operator*(const Transform& b)const{
+  Transform ret=b;
+  ret.scale*=scale;
+  ret.position*=scale;
+  ret.rotation=quatMul(rotation,ret.rotation);
+  ret.position=quatRot(rotation,ret.position);
+  return ret;
+}
+
+Transform Transform::operator/(const Transform& b) const{
+  return b.inverse()**this;
+}
+
+dvec3 operator/(const dvec3& v,const Transform& t){
+  return quatRot(quatConj(t.rotation),v-t.position)/t.scale;
 }
 
 Transform& Transform::translate(const dvec3& delta){
@@ -17,11 +41,6 @@ Transform& Transform::rotate(const dvec3& axis,double theta){
   return *this;
 }
 
-Transform& Transform::scaleBy(const dvec3& s){
-  scale*=s;
-  return *this;
-}
-
 Transform& Transform::scaleBy(double s){
   scale*=s;
   return *this;
@@ -29,9 +48,9 @@ Transform& Transform::scaleBy(double s){
 
 dmat4 Transform::toMatrix() const{
   dmat4 mat(
-    scale.x,0,0,0,
-    0,scale.y,0,0,
-    0,0,scale.z,0,
+    scale,0,0,0,
+    0,scale,0,0,
+    0,0,scale,0,
     0,  0,  0,  1
   );
   mat=dmat4(quatMtx(rotation))*mat;

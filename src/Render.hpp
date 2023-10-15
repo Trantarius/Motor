@@ -5,6 +5,8 @@
 #include "Spatial.hpp"
 #include "util/mem.hpp"
 #include "Cycle.hpp"
+#include "Light.hpp"
+#include "Shader.hpp"
 
 class Render;
 class Window;
@@ -43,17 +45,23 @@ class Render : public STATIC_CYCLE(&Renderable::render), public virtual MemSafe{
   fmat4 current_view;
   ivec2 size=ivec2(1024,576);
 
+  List<SafePtr<Light>> lights;
+  UniformBuffer _light_buffer;
 
   void preCycle();
 public:
 
   const fmat4& projection=current_projection;
   const fmat4& view=current_view;
+  const UniformBuffer& light_buffer=_light_buffer;
 
   Unique<Camera> camera;
 
   virtual void setSize(ivec2 to){size=to;}
   virtual ivec2 getSize() const {return size;}
+
+  void addLight(Light& light);
+  void removeLight(Light& light);
 
   Render();
 };

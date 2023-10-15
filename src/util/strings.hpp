@@ -115,9 +115,28 @@ void print(Ts...args){
   (std::cout<<...<<tostr(args))<<std::endl;
 }
 
+inline bool setgetPrintColor(int set=-1){
+  static bool enableColor=false;
+  if(set==0){
+    enableColor=false;
+  }
+  if(set==1){
+    enableColor=true;
+  }
+  return enableColor;
+}
+
+
 template<Printable...Ts>
 void printerr(Ts...args){
-  (std::cerr<<...<<tostr(args))<<std::endl;
+  if(setgetPrintColor()){
+    std::cerr<<"\033[91m";//set color to red
+  }
+  (std::cerr<<...<<tostr(args));
+  if(setgetPrintColor()){
+    std::cerr<<"\033[0m";//reset
+  }
+  std::cerr<<std::endl;
 }
 
 template<Printable...Ts>
@@ -165,19 +184,40 @@ inline void print_loadbar(double completion){
   std::cout.flush();
 }
 
+template<typename T>
+concept StructToStringAble = requires(T a,string b){
+  {structToString(a,b)}->std::same_as<string>;
+};
 
-#define _MEM_TO_STRING(NAME) \
-if constexpr (std::is_same<decltype(s.NAME),string>::value || std::is_same<decltype(s.NAME),const char*>::value){\
-  ret+= "  " #NAME ":\t\"" + tostr(s.NAME) + "\"\n";\
-}else{\
-  ret+= "  " #NAME ":\t" + tostr(s.NAME) + "\n";\
+template<Printable T> requires (!StructToStringAble<T>) && (!std::convertible_to<T,string>)
+string _structToStringEntry(string name,const T& val,string tab){
+  return tab + name + ":  " + tostr(val) + "\n";
 }
 
+template<StructToStringAble T>
+string _structToStringEntry(string name, const T& val,string tab){
+  return tab + name + ":  " + structToString(val,tab) + "\n";
+}
+
+inline string _structToStringEntry(string name,string val,string tab){
+  return tab + name + ":  \"" + val + "\"\n";
+}
+
+#define _MEM_TO_STRING(NAME) \
+ret += _structToStringEntry(#NAME,s.NAME,mytab);
+
 //creates a tostr() for a struct, used in form STRUCT_TO_STRING(myClass,mem1,mem2,mem3)
-#define STRUCT_TO_STRING(STRUCT,...)\
-inline string tostr(const STRUCT& s){\
+#define STRUCT_TO_STRING(STRUCT,...) \
+inline string structToString(const STRUCT& s, string tab){\
+  string mytab = tab + "  ";\
   string ret = #STRUCT "{\n";\
+  \
   FOR_EACH(_MEM_TO_STRING,__VA_ARGS__)\
-  ret += "}";\
+  \
+  ret += tab + "}";\
   return ret;\
+}\
+\
+inline string tostr(const STRUCT& s){\
+  return structToString(s,"");\
 }
