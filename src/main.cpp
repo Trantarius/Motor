@@ -14,11 +14,6 @@
 #include "util/rand.hpp"
 #include "util/id.hpp"
 #include "core/Texture.hpp"
-
-Window* Main::window=nullptr;
-Render* Main::render=nullptr;
-Input* Main::input=nullptr;
-Updater* Main::updater=nullptr;
 bool should_quit=false;
 
 void init();

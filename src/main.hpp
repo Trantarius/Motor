@@ -10,8 +10,8 @@ class Window;
 class Updater;
 
 struct Main{
-  static Input* input;
-  static Render* render;
-  static Window* window;
-  static Updater* updater;
+  inline static Input* input = nullptr;
+  inline static Render* render = nullptr;
+  inline static Window* window = nullptr;
+  inline static Updater* updater = nullptr;
 };
