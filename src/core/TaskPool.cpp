@@ -1,4 +1,5 @@
 #include "TaskPool.hpp"
+#include <cassert>
 
 
 bool TaskLock::_is_owned_by_me(const std::shared_ptr<Core>& core){
@@ -35,10 +36,7 @@ void TaskLock::_unlock(const std::shared_ptr<Core>& core){
 }
 
 TaskLock::~TaskLock(){
-#ifndef NDEBUG
-	if(is_owned_by_anyone())
-		throw std::logic_error("Task lock was destroyed while still locked");
-#endif
+	assert(!is_owned_by_anyone());
 }
 
 
@@ -81,7 +79,7 @@ void TaskPool::add_task(std::unique_ptr<Task>&& task){
 		throw std::logic_error("cannot add a task without a callable");
 #endif
 	std::scoped_lock lock(mtx);
-	tasks.push_back(task);
+	tasks.push_back(std::move(task));
 	empty_wait_sema.release();
 }
 
@@ -146,29 +144,21 @@ void TaskPool::flush(){
 }
 
 TaskPool::~TaskPool(){
-#ifndef NDEBUG
-	if(!empty()){
-		throw std::logic_error("Task pool deleted with "+std::to_string(queue_size())+" tasks remaining");
-	}
-#endif
+	assert(empty());
 }
 
 
-void SingleThreadPool::work_loop(SingleThreadPool& pool){
-	while(!pool.is_destructing){
-		pool.empty_wait_sema.acquire();
-		pool.do_one_task();
+void SingleThreadPool::work_loop(SingleThreadPool* pool){
+	while(!pool->is_destructing){
+		pool->empty_wait_sema.acquire();
+		pool->do_one_task();
 	}
 }
 
-SingleThreadPool::SingleThreadPool() : thread(work_loop, *this) {}
+SingleThreadPool::SingleThreadPool() : thread(&work_loop, this) {}
 
 SingleThreadPool::~SingleThreadPool(){
-#ifndef NDEBUG
-	if(!empty()){
-		throw std::logic_error("Task pool deleted with "+std::to_string(queue_size())+" tasks remaining");
-	}
-#endif
+	assert(empty());
 	is_destructing = true;
 	thread.join();
 }
@@ -181,10 +171,10 @@ void SingleThreadPool::flush(){
 }
 
 
-void ThreadPool::work_loop(ThreadPool& pool){
-	while(!pool.is_destructing){
-		pool.empty_wait_sema.acquire();
-		pool.do_one_task();
+void ThreadPool::work_loop(ThreadPool* pool){
+	while(!pool->is_destructing){
+		pool->empty_wait_sema.acquire();
+		pool->do_one_task();
 	}
 }
 
@@ -192,16 +182,12 @@ ThreadPool::ThreadPool() {
 	size_t thread_count = std::thread::hardware_concurrency();
 	thread_count = thread_count > 4 ? thread_count : 4;
 	for(int n=0;n<thread_count;n++){
-		threads.emplace_back(&work_loop, *this);
+		threads.emplace_back(&work_loop, this);
 	}
 }
 
 ThreadPool::~ThreadPool(){
-#ifndef NDEBUG
-	if(!empty()){
-		throw std::logic_error("Task pool deleted with "+std::to_string(queue_size())+" tasks remaining");
-	}
-#endif
+	assert(empty());
 	is_destructing = true;
 	empty_wait_sema.release(threads.size());
 	for( std::thread& t : threads){

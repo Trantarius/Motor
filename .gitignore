@@ -1,3 +1,7 @@
-build
 .cache
 vgcore.*
+Motor
+**.o
+.sconsign.dblite
+compile_commands.json
+glfw-3.4/build

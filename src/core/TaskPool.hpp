@@ -53,7 +53,7 @@ public:
 class TaskPool{
 protected:
 
-	std::mutex mtx;
+	mutable std::mutex mtx;
 	std::list<std::unique_ptr<Task>> tasks;
 	std::counting_semaphore<> empty_wait_sema {0};
 	std::condition_variable empty_notifier;
@@ -92,7 +92,7 @@ class SingleThreadPool : public TaskPool{
 	std::counting_semaphore<> empty_wait_sema {0};
 	std::thread thread;
 
-	static void work_loop(SingleThreadPool&);
+	static void work_loop(SingleThreadPool*);
 	using TaskPool::do_one_task;
 
 public:
@@ -107,7 +107,7 @@ class ThreadPool : public TaskPool{
 	bool is_destructing = false;
 	std::list<std::thread> threads;
 
-	static void work_loop(ThreadPool&);
+	static void work_loop(ThreadPool*);
 	using TaskPool::do_one_task;
 
 public:
