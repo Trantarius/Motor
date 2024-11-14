@@ -3,11 +3,12 @@
 #include <stdexcept>
 #include "util/mat.hpp"
 #include "util/id.hpp"
-#include "util/collections.hpp"
 #include "defs/gl_defs.hpp"
 #include "util/strings.hpp"
 #include "util/refcount.hpp"
 #include "util/Bloc.hpp"
+#include <map>
+#include <vector>
 
 class Texture;
 
@@ -29,7 +30,7 @@ struct UniformBlock{
   int index;
   int data_size;
 
-  Map<ID,UniformBlockMember,ID::Hash> members;
+  std::map<ID,UniformBlockMember> members;
 };
 
 struct UniformInfo{
@@ -52,8 +53,8 @@ class Shader{
   struct _Data{
     uint refcount=0;
     uint gl_program=0;
-    Map<ID,UniformInfo,ID::Hash> uniforms;
-    Map<ID,UniformBlock,ID::Hash> uniform_blocks;
+    std::map<ID,UniformInfo> uniforms;
+    std::map<ID,UniformBlock> uniform_blocks;
   };
 
   REF_COUNTER(Shader,_Data)
@@ -76,10 +77,10 @@ public:
 
   void setUniformBlock(ID name,UniformBuffer buffer);
 
-  Array<UniformInfo> getUniforms() const;
+  std::vector<UniformInfo> getUniforms() const;
   UniformInfo getUniform(ID id) const;
   bool hasUniform(ID id) const;
-  Array<UniformBlock> getUniformBlocks() const;
+  std::vector<UniformBlock> getUniformBlocks() const;
   UniformBlock getUniformBlock(ID id) const;
   bool hasUniformBlock(ID id) const;
 

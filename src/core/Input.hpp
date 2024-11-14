@@ -16,7 +16,7 @@ class Input{
   inline static Map<Key,bool> keyStates;
   //inline static Window& window;
 
-  inline static SingleThreadPool input_event_pool;
+  inline static TaskPool input_event_pool;
 
   inline static std::set<Callback<Key,bool>> generic_listeners;
   inline static std::map<Key,std::set<Callback<bool>>> key_listeners;

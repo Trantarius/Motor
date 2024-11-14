@@ -2,8 +2,8 @@
 #include "Input.hpp"
 #include "Render.hpp"
 #include "Window.hpp"
-#include "Updater.hpp"
 #include "util/print.hpp"
+#include "util/time.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -25,12 +25,20 @@ void Engine::init(){
 		throw std::runtime_error("glfwInit failed");
 	}
 
-	GLFWwindow* winptr=Window::make_new_window();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-	glfwMakeContextCurrent(winptr);
+  GLFWwindow* win = glfwCreateWindow(1024,600,"Hello",NULL,NULL);
+  assert(win);
+
+	//GLFWwindow* winptr=Window::make_new_window();
+
+	glfwMakeContextCurrent(win);
 	glfwSwapInterval(1);//enable Vsync
 	if(glfwRawMouseMotionSupported()){
-		glfwSetInputMode(winptr,GLFW_RAW_MOUSE_MOTION,GLFW_TRUE);
+		glfwSetInputMode(win,GLFW_RAW_MOUSE_MOTION,GLFW_TRUE);
 	}
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -45,33 +53,40 @@ void Engine::init(){
 
 	Shader::loadAllShaderFiles("src/shaders");
 
-	window=new Window(winptr);
-	input=&window->input;
-	render=&window->render;
-	updater=new Updater();
+
+	Window::init(win);
+  Input::init();
 }
 
-void Engine::main_loop(){
+void Engine::mainLoop(){
 
   size_t frame_counter=0;
   double last_frame=time();
 
   while(!is_quitting){
     glfwPollEvents();
-    input->update();
-    updater->cycle(updater);
-    render->cycle(render);
-    if(glfwWindowShouldClose(window->glfw())){
+    Input::update();
+    //input->update();
+    //updater->cycle(updater);
+    //render->cycle(render);
+    frame_cycle.flush();
+    frame_cycle.recycle();
+    Window::viewport().render();
+    if(glfwWindowShouldClose(Window::glfw())){
       quit();
     }
 
     frame_counter++;
     double now=time();
+    Engine::dT = now-last_frame;
     if(now-last_frame>1.0){
       last_frame=now;
       frame_counter=0;
     }
   }
+}
+
+void Engine::terminate(){
   glfwTerminate();
 }
 

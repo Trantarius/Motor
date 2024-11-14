@@ -1,6 +1,5 @@
 #include "Shader.hpp"
 #include <filesystem>
-#include "main.hpp"
 #include "util/io.hpp"
 #include "defs/gl_defs.hpp"
 #include "Texture.hpp"
@@ -200,10 +199,10 @@ void Shader::setUniformBlock(ID name, UniformBuffer buffer){
 
 //    Uniform Info Getters
 
-Array<UniformInfo> Shader::getUniforms() const{
+std::vector<UniformInfo> Shader::getUniforms() const{
   assert(data!=nullptr);
-  Array<UniformInfo> unis;
-  for(const Pair<ID,UniformInfo>& entry : data->uniforms){
+  std::vector<UniformInfo> unis;
+  for(const std::pair<ID,UniformInfo>& entry : data->uniforms){
     unis.push_back(entry.second);
   }
   return unis;
@@ -220,10 +219,10 @@ bool Shader::hasUniform(ID id) const{
   return data->uniforms.contains(id);
 }
 
-Array<UniformBlock> Shader::getUniformBlocks() const{
+std::vector<UniformBlock> Shader::getUniformBlocks() const{
   assert(data!=nullptr);
-  Array<UniformBlock> blocks;
-  for(const Pair<ID,UniformBlock>& entry : data->uniform_blocks){
+  std::vector<UniformBlock> blocks;
+  for(const std::pair<ID,UniformBlock>& entry : data->uniform_blocks){
     blocks.push_back(entry.second);
   }
   return blocks;

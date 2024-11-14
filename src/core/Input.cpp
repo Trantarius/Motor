@@ -1,5 +1,4 @@
 #include "Input.hpp"
-#include "main.hpp"
 #include "Window.hpp"
 #include "util/time.hpp"
 
@@ -82,6 +81,7 @@ void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, i
       }
     }
     input_event_pool.add_tasks(std::move(tasks));
+    input_event_pool.flush();
   }
 }
 
@@ -100,8 +100,8 @@ void Input::init(){
 
   for(auto pr : keyNames){
     keyStates.emplace(pr.first,false);
-    key_listeners.emplace(pr.first,Cycle<void(bool)>());
-    keypress_listeners.emplace(pr.first,Cycle<void(void)>());
+    key_listeners.emplace(pr.first,std::set<Callback<bool>>());
+    keypress_listeners.emplace(pr.first,std::set<Callback<>>());
   }
 }
 

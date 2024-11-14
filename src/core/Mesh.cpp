@@ -1,7 +1,7 @@
 #include "Mesh.hpp"
-#include "main.hpp"
 #include "util/io.hpp"
 #include "defs/gl_defs.hpp"
+#include "Window.hpp"
 #include <map>
 
 MeshData::MeshData(Bloc<fvec3> verts):MeshData(_ref_count_init()){
@@ -120,15 +120,15 @@ void MeshData::draw(uint mode) const {
   checkGLError();
 }
 
-void Mesh::render(Render* renderer){
+void Mesh::render(int mode) {
   if(!shader.isNull() && !mesh_data.isNull()){
     shader.use();
     shader.setUniform("model"_id,(fmat4)transform.toMatrix());
-    shader.setUniform("view"_id,(fmat4)renderer->view);
-    shader.setUniform("projection"_id,(fmat4)renderer->projection);
+    shader.setUniform("view"_id,(fmat4)Window::viewport().view);
+    shader.setUniform("projection"_id,(fmat4)Window::viewport().projection);
 
     if(shader.hasUniformBlock("LightBlock"_id)){
-      shader.setUniformBlock("LightBlock"_id,renderer->light_buffer);
+      shader.setUniformBlock("LightBlock"_id,Window::viewport().light_buffer);
     }
 
     mesh_data.draw(GL_TRIANGLES);
@@ -140,8 +140,8 @@ void Mesh::render(Render* renderer){
 
 
 
-Array<string> splitString(string str, string delim){
-  Array<string> ret;
+std::vector<string> splitString(string str, string delim){
+  std::vector<string> ret;
   size_t start=0;
   for(size_t n=0;n<str.size();n++){
     if(delim.find(str[n])!=string::npos){
@@ -174,16 +174,16 @@ MeshData MeshData::readOBJ(string path){
   string file(filebloc.ptr,filebloc.size);
   filebloc.destroy();
 
-  Array<fvec3> verts;
-  Array<fvec2> uvs;
-  Array<fvec3> norms;
-  Array<fvec3> colors;
-  Array<Array<ivec3>> faces;
+  std::vector<fvec3> verts;
+  std::vector<fvec2> uvs;
+  std::vector<fvec3> norms;
+  std::vector<fvec3> colors;
+  std::vector<std::vector<ivec3>> faces;
 
-  Array<string> lines=splitString(file,"\n\r");
+  std::vector<string> lines=splitString(file,"\n\r");
 
   for(string& line : lines){
-    Array<string> words=splitString(line," ");
+    std::vector<string> words=splitString(line," ");
 
     if(words.empty()){
       continue;
@@ -223,7 +223,7 @@ MeshData MeshData::readOBJ(string path){
         throw IOError("Non-triangular face",path);
       }
 
-      Array<ivec3> face;
+      std::vector<ivec3> face;
       for(int c=1;c<words.size();c++){
         int slash_count=countChar(words[c],'/');
         ivec3 corner(-1,-1,-1);
@@ -232,7 +232,7 @@ MeshData MeshData::readOBJ(string path){
           corner.x=stol(words[c])-1;
         }
         else if(slash_count==1){
-          Array<string> pts=splitString(words[c],"/");
+          std::vector<string> pts=splitString(words[c],"/");
           if(pts.size()!=2){
             throw IOError("Bad format (OBJ)",path);
           }
@@ -240,7 +240,7 @@ MeshData MeshData::readOBJ(string path){
           corner.y=stol(pts[1])-1;
         }
         else if(slash_count==2){
-          Array<string> pts=splitString(words[c],"/");
+          std::vector<string> pts=splitString(words[c],"/");
           if(pts.size()<2){
             throw IOError("Bad format (OBJ)",path);
           }
@@ -268,9 +268,9 @@ MeshData MeshData::readOBJ(string path){
   }
   typedef bool (*compType)(ivec3,ivec3);
   std::map<ivec3,size_t,compType> cornermap(compare);
-  Array<ivec3> elements;
+  std::vector<ivec3> elements;
 
-  for(Array<ivec3>& face : faces){
+  for(std::vector<ivec3>& face : faces){
     ivec3 element;
     if(face.size()!=3){
       throw IOError("Non triangular face",path);
@@ -302,7 +302,7 @@ MeshData MeshData::readOBJ(string path){
     throw IOError("Bad format (OBJ)",path);
   }
 
-  Array<uint> attribute_widths;
+  std::vector<uint> attribute_widths;
   uint total_width=3;
   attribute_widths.push_back(3);
   if(has_color){
@@ -318,7 +318,7 @@ MeshData MeshData::readOBJ(string path){
     attribute_widths.push_back(3);
   }
 
-  Array<float> vdata(cornermap.size()*total_width);
+  std::vector<float> vdata(cornermap.size()*total_width);
   for(std::pair<ivec3,size_t> pr : cornermap){
     size_t idx=pr.second*total_width;
 

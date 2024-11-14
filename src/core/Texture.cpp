@@ -1,7 +1,5 @@
 #include "Texture.hpp"
-#include "main.hpp"
 #include <cassert>
-#include <stdexcept>
 #include "util/id.hpp"
 #include "util/stb_image.h"
 

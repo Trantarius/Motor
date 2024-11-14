@@ -20,7 +20,16 @@ public:
   Callback(Callback&&)=default;
   Callback& operator=(const Callback&)=default;
   Callback& operator=(Callback&&)=default;
-  std::strong_ordering operator<=>(const Callback&) const = default;
+  std::strong_ordering operator <=> (const Callback& c) const{
+		std::strong_ordering obj_o = std::strong_ordering::equal;
+		if(obj.owner_before(c.obj))
+			obj_o = std::strong_ordering::less;
+		else if(c.obj.owner_before(obj))
+			obj_o = std::strong_ordering::greater;
+		if(obj_o==0)
+			return ((size_t)fptr)<=>((size_t)c.fptr);
+		return obj_o;
+	};
   bool operator==(const Callback&) const = default;
   bool operator!=(const Callback&) const = default;
   bool operator<(const Callback&) const = default;
@@ -30,7 +39,7 @@ public:
   CallbackResponse operator()(Args...args){
     std::shared_ptr<void> strong = obj.lock();
     if(strong && fptr)
-      return fptr(strong.get(),std::forward(args)...);
+      return fptr(strong.get(),std::forward<Args>(args)...);
     return CALLBACK_EXPIRED;
   }
 
@@ -39,7 +48,7 @@ public:
     Callback ret;
     ret.obj = obj;
     static constexpr auto func = [](void* ptr, Args...args){
-      static_cast<Class*>(ptr)->*FPTR(std::forward(args)...);
+      (static_cast<Class*>(ptr)->*FPTR)(std::forward(args)...);
       return CALLBACK_DONE;
     };
     ret.fptr = func;

@@ -1,14 +1,13 @@
 #pragma once
 #include "core/Render.hpp"
-#include "core/Updater.hpp"
 
-class OrbitCamera : public Updatable, public PerspectiveCamera{
+class OrbitCamera :public PerspectiveCamera, public std::enable_shared_from_this<OrbitCamera>{
   void onEscapePress();
 public:
   float orbit_distance=5.0;
-  float speed=0.01;
-  void update(Updater* up) override;
-  fmat4 getView(Render*) const override;
-  OrbitCamera();
-  ~OrbitCamera();
+  float speed=0.00001;
+  void update() ;
+  fmat4 getView() const override;
+  void init();
+  //OrbitCamera();
 };

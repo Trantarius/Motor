@@ -1,14 +1,10 @@
 #pragma once
-#include "util/collections.hpp"
 #include "util/mat.hpp"
 #include "Spatial.hpp"
-#include "util/Cycle.hpp"
 #include "Light.hpp"
 #include "Shader.hpp"
-#include "TaskPool.hpp"
-
-class Render;
-class Window;
+#include <memory>
+#include <list>
 
 struct Camera : public Spatial{
   virtual fmat4 getProjection(ivec2 vp_size) const=0;
@@ -30,7 +26,7 @@ struct OrthographicCamera : public Camera{
 };
 
 struct Renderable{
-  virtual void render() const = 0;
+  virtual void render(int mode) = 0;
 };
 
 
@@ -41,28 +37,36 @@ class Viewport{
   fmat4 current_view;
   ivec2 size=ivec2(1024,576);
 
-  //List<SafePtr<Light>> lights;
-  //UniformBuffer _light_buffer;
+  std::list<std::shared_ptr<Light>> lights;
+  UniformBuffer _light_buffer;
 
   //void preCycle();
 
   //TaskCycle render_tasks;
 
+protected:
+
+  virtual void preRender(){};
+  virtual void postRender(){};
+
 public:
+  int mode = 0;
 
   std::list<std::weak_ptr<Renderable>> objects;
 
   const fmat4& projection=current_projection;
   const fmat4& view=current_view;
-  //const UniformBuffer& light_buffer=_light_buffer;
+  const UniformBuffer& light_buffer=_light_buffer;
 
-  std::unique_ptr<Camera> camera;
+  std::shared_ptr<Camera> camera;
+
+  void render();
 
   virtual void setSize(ivec2 to){size=to;}
   virtual ivec2 getSize() const {return size;}
 
-  void addLight(Light& light);
-  void removeLight(Light& light);
+  void addLight(std::shared_ptr<Light> light);
+  void removeLight(std::shared_ptr<Light> light);
 
   Viewport();
 };

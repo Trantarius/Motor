@@ -1,12 +1,12 @@
 #include "Render.hpp"
-#include "Window.hpp"
-#include "main.hpp"
 
 
-void Render::preCycle(){
+void Viewport::render(){
+  preRender();
+
   assert(camera!=nullptr);
-  current_projection=camera->getProjection(this);
-  current_view=camera->getView(this);
+  current_projection=camera->getProjection(size);
+  current_view=camera->getView();
 
   // update light buffer
 
@@ -19,12 +19,12 @@ void Render::preCycle(){
 
   int idx=0;
   for(auto it=lights.begin();it!=lights.end();){
-    if(!it->is_alive()){
+    if(!*it){
       it=lights.erase(it);
       continue;
     }
 
-    SafePtr<Light>& light=*it;
+    std::shared_ptr<Light>& light=*it;
     colors[idx]=light->color;
     lumins[idx]=light->lumin;
     spreads[idx]=light->spread;
@@ -44,40 +44,42 @@ void Render::preCycle(){
   _light_buffer.setUniformArray("light_types"_id,Bloc(types,8));
   _light_buffer.endUpdate();
 
+
+  for(auto it=objects.begin();it!=objects.end();){
+    std::shared_ptr<Renderable> strong = it->lock();
+    if(!strong){
+      it=objects.erase(it);
+      continue;
+    }
+    strong->render(mode);
+    it++;
+  }
+
+  postRender();
 }
 
-Render::Render(){
-  addPreCycle(SafeFunc<void()>(this,&Render::preCycle));
+Viewport::Viewport(){
   Shader shader("/mesh.v.glsl","/lighttest.f.glsl");
   UniformBlock block=shader.getUniformBlock("LightBlock"_id);
   _light_buffer=UniformBuffer(block);
 }
 
-void Render::addLight(Light& light){
-  SafePtr<Light> ptr(&light);
-  lights.push_back(ptr);
+void Viewport::addLight(std::shared_ptr<Light> light){
+  lights.push_back(light);
 }
 
-void Render::removeLight(Light& light){
-  SafePtr<Light> ptr(&light);
-  for(auto it=lights.begin();it!=lights.end();){
-    if(*it==ptr){
-      it=lights.erase(it);
-    }else{
-      it++;
-    }
-  }
+void Viewport::removeLight(std::shared_ptr<Light> light){
+  lights.remove(light);
 }
 
-fmat4 Camera::getView(Render* renderer) const {
+fmat4 Camera::getView() const {
   return transform.toInvMatrix();
 }
 
-fmat4 PerspectiveCamera::getProjection(Render* renderer) const {
+fmat4 PerspectiveCamera::getProjection(ivec2 vp_size) const {
   //http://www.songho.ca/opengl/gl_projectionmatrix.html
-  assert(renderer!=nullptr);
   float height=tan(fov/2)*near;
-  float width=height * (float)renderer->getSize().x/renderer->getSize().y;
+  float width=height * (float)vp_size.x/vp_size.y;
   return fmat4(
     near/width,   0,    0,    0,
     0,    near/height,    0,    0,
@@ -86,9 +88,8 @@ fmat4 PerspectiveCamera::getProjection(Render* renderer) const {
   );
 }
 
-fmat4 OrthographicCamera::getProjection(Render* renderer) const {
-  assert(renderer!=nullptr);
-  float aspect=(float)renderer->getSize().x/renderer->getSize().y;
+fmat4 OrthographicCamera::getProjection(ivec2 vp_size) const {
+  float aspect=(float)vp_size.x/vp_size.y;
   float height=size;
   float width=height*aspect;
   return fmat4(
@@ -97,25 +98,4 @@ fmat4 OrthographicCamera::getProjection(Render* renderer) const {
     0,    0,    2/(near-far),   (near+far)/(near-far),
     0,    0,    0,    1
   );
-}
-
-void WindowRender::preRender(){
-  glfwMakeContextCurrent(window.glfw());
-  glBindFramebuffer(GL_FRAMEBUFFER,0);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-void WindowRender::postRender(){
-  glfwSwapBuffers(window.glfw());
-}
-
-void WindowRender::setSize(ivec2 to){
-  window.setSize(to);
-}
-ivec2 WindowRender::getSize() const {
-  return window.getSize();
-}
-
-WindowRender::WindowRender(Window& win):window(win){
-  addPreCycle(SafeFunc<void()>(this,&WindowRender::preRender));
-  addPostCycle(SafeFunc<void()>(this,&WindowRender::postRender));
 }

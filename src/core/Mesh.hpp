@@ -25,9 +25,8 @@ public:
   static MeshData readOBJ(string path);
 };
 
-class Mesh : public Renderable, public virtual Spatial{
-  void render(Render*) override;
-public:
+struct Mesh : public Renderable, public virtual Spatial{
+  void render(int) override;
   MeshData mesh_data;
   Shader shader;
 

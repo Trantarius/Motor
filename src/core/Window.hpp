@@ -20,7 +20,7 @@ public:
 
   static GLFWwindow* glfw() {return window;}
 
-  static void init();
+  static void init(GLFWwindow*);
 
   //Window();
   //Window(GLFWwindow*);

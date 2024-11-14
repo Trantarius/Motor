@@ -1,11 +1,12 @@
 #include "OrbitCamera.hpp"
 #include "core/Input.hpp"
-#include "main.hpp"
+#include "core/Engine.hpp"
+#include "util/print.hpp"
 
 
-void OrbitCamera::update(Updater* upd){
+void OrbitCamera::update(){
 
-  fvec2 mrel = Main::input->getMouseVel()*upd->dT;
+  fvec2 mrel = Input::getMouseVel()*Engine::dT;
 
   dvec2 theta=mrel*speed;
 
@@ -17,7 +18,7 @@ void OrbitCamera::update(Updater* upd){
   rotation=quatMul(xrot,rotation);
 }
 
-fmat4 OrbitCamera::getView(Render*) const {
+fmat4 OrbitCamera::getView() const {
   fvec3 offset=quatRot(rotation,fvec3(0,0,orbit_distance));
   Transform tform=transform;
   tform.translate(offset);
@@ -25,13 +26,9 @@ fmat4 OrbitCamera::getView(Render*) const {
 }
 
 void OrbitCamera::onEscapePress(){
-  quit();
+  Engine::quit();
 }
 
-OrbitCamera::OrbitCamera(){
-  Main::input->addKeypressListener(Key::ESCAPE,SafeFunc<void()>(this,&OrbitCamera::onEscapePress));
-}
-
-OrbitCamera::~OrbitCamera(){
-  Main::input->removeKeypressListener(Key::ESCAPE,SafeFunc<void()>(this,&OrbitCamera::onEscapePress));
+void OrbitCamera::init(){
+  Input::addKeypressListener(Key::ESCAPE, Callback<>::from<OrbitCamera,&OrbitCamera::onEscapePress>(shared_from_this()));
 }

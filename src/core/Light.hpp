@@ -1,9 +1,8 @@
 #pragma once
 #include "Spatial.hpp"
-#include "util/MemSafe.hpp"
 #include "util/strings.hpp"
 
-struct Light : public virtual Spatial, public virtual MemSafe{
+struct Light : public Spatial{
   /*
    * DIRECTIONAL: direction is local -Z axis;
    * LINE: stretches from local origin to local (0,0,-1).
