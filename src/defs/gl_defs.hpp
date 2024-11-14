@@ -2,6 +2,8 @@
 #include <cinttypes>
 #include <string>
 #include <stdexcept>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 struct glEnum{
   uint val=0;

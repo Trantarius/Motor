@@ -1,7 +1,7 @@
 #include "Window.hpp"
-#include "main.hpp"
+#include "defs/gl_defs.hpp"
 
-ivec2 Window::getSize() const{
+ivec2 Window::getSize(){
   int x,y;
   glfwGetWindowSize(window,&x,&y);
   return ivec2(x,y);
@@ -16,29 +16,13 @@ void framebufferResizeCallback(GLFWwindow* window, int width, int height){
   glViewport(0,0,width,height);
 }
 
-GLFWwindow* Window::make_new_window(){
+void Window::init(){
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-  GLFWwindow* ret=glfwCreateWindow(1024,600,"Hello",NULL,NULL);
-  assert(ret);
-  return ret;
-}
-
-Window::Window():window(make_new_window()){
+  window=glfwCreateWindow(1024,600,"Hello",NULL,NULL);
   assert(window);
   glfwSetFramebufferSizeCallback(window,framebufferResizeCallback);
-  ptr_map[window]=this;
-}
-Window::Window(GLFWwindow* win):window(win){
-  assert(window);
-  glfwSetFramebufferSizeCallback(window,framebufferResizeCallback);
-  ptr_map[window]=this;
-}
-
-Window* Window::fromGLFW(GLFWwindow* ptr){
-  assert(ptr_map.contains(ptr));
-  return ptr_map[ptr];
 }

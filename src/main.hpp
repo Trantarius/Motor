@@ -1,4 +1,5 @@
 #pragma once
+#include "defs/gl_defs.hpp"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 

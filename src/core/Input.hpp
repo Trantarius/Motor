@@ -3,18 +3,12 @@
 #include "util/vec.hpp"
 //#include "util/Cycle.hpp"
 #include "TaskPool.hpp"
+#include "defs/gl_defs.hpp"  // IWYU pragma: keep
 #include <set>
 #include <map>
 
-struct GLFWwindow;
-class Window;
-
 class Input{
-public:
-  enum CursorMode{NORMAL=0x00034001,HIDDEN=0x00034002,DISABLED=0x00034003};
-private:
-  inline static std::mutex mtx;
-  inline static CursorMode cursorMode=NORMAL;
+  inline static int cursor_mode=GLFW_CURSOR_NORMAL;
   inline static fvec2 mouse_pos{};
   inline static fvec2 mouse_vel{};
   inline static double last_update=0;
@@ -24,9 +18,9 @@ private:
 
   inline static SingleThreadPool input_event_pool;
 
-  inline static std::set<CallablePtr<void(Key,bool)>> generic_listeners;
-  inline static std::map<Key,std::set<CallablePtr<void(bool)>>> key_listeners;
-  inline static std::map<Key,std::set<CallablePtr<void(void)>>> keypress_listeners;
+  inline static std::set<Callback<Key,bool>> generic_listeners;
+  inline static std::map<Key,std::set<Callback<bool>>> key_listeners;
+  inline static std::map<Key,std::set<Callback<>>> keypress_listeners;
 
 
   static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -36,21 +30,21 @@ public:
   static string keyName(Key key);
   static bool getKey(Key key);
 
-  static void setCursorMode(CursorMode to);
-  static CursorMode getCursorMode();
+  static void setCursorMode(int to);
+  static int getCursorMode();
 
   static fvec2 getMousePos(){return mouse_pos;}
   static fvec2 getMouseVel(){return mouse_vel;}
   static void update();
 
-  static void addGenericListener(const CallablePtr<void(Key,bool)>& listener);
-  static void removeGenericListener(const CallablePtr<void(Key,bool)>& listener);
+  static void addGenericListener(const Callback<Key,bool>& listener);
+  static void removeGenericListener(const Callback<Key,bool>& listener);
 
-  static void addKeyListener(Key key,const CallablePtr<void(bool)>& key_listener);
-  static void removeKeyListener(Key key,const CallablePtr<void(bool)>& key_listener);
+  static void addKeyListener(Key key,const Callback<bool>& key_listener);
+  static void removeKeyListener(Key key,const Callback<bool>& key_listener);
 
-  static void addKeypressListener(Key key,const CallablePtr<void(void)>& keypress_listener);
-  static void removeKeypressListener(Key key,const CallablePtr<void(void)>& keypress_listener);
+  static void addKeypressListener(Key key,const Callback<>& keypress_listener);
+  static void removeKeypressListener(Key key,const Callback<>& keypress_listener);
 
   static void init();
 

@@ -11,12 +11,12 @@ bool Input::getKey(Key key){
   return keyStates[key];
 }
 
-void Input::setCursorMode(CursorMode to){
-  cursorMode=to;
+void Input::setCursorMode(int to){
+  cursor_mode=to;
   glfwSetInputMode(Window::glfw(),GLFW_CURSOR,to);
 }
-Input::CursorMode Input::getCursorMode(){
-  return cursorMode;
+int Input::getCursorMode(){
+  return cursor_mode;
 }
 
 void Input::update(){
@@ -32,23 +32,56 @@ void Input::update(){
   last_mouse_pos=mouse_pos;
 }
 
+std::function<TaskStatus(void)> generic_listener_task(const Callback<Key,bool>& listener, Key key, bool pressed){
+  static constexpr TaskStatus(*func)(Callback<Key,bool>,Key,bool) = [](Callback<Key,bool> callback, Key key, bool pressed){
+    CallbackResponse resp = callback(key,pressed);
+    if(resp==CALLBACK_EXPIRED){
+      Input::removeGenericListener(callback);
+    }
+    return TASK_DONE;
+  };
+  return std::bind(func,listener,key,pressed);
+}
+
+std::function<TaskStatus(void)> key_listener_task(const Callback<bool>& listener, Key key, bool pressed){
+  static constexpr TaskStatus(*func)(Callback<bool>,Key,bool) = [](Callback<bool> callback, Key key,bool pressed){
+    CallbackResponse resp = callback(pressed);
+    if(resp==CALLBACK_EXPIRED){
+      Input::removeKeyListener(key,callback);
+    }
+    return TASK_DONE;
+  };
+  return std::bind(func,listener,key,pressed);
+}
+
+std::function<TaskStatus(void)> keypress_listener_task(const Callback<>& listener, Key key){
+  static constexpr TaskStatus(*func)(Callback<>,Key) = [](Callback<> callback, Key key){
+    CallbackResponse resp = callback();
+    if(resp==CALLBACK_EXPIRED){
+      Input::removeKeypressListener(key,callback);
+    }
+    return TASK_DONE;
+  };
+  return std::bind(func,listener,key);
+}
+
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
   if(action==GLFW_PRESS){
     bool is_press = action==GLFW_PRESS;
     keyStates[(Key)key]=is_press;
-    List<CallablePtr<void(void)>> tasks;
-    for(const CallablePtr<void(Key,bool)>& listener : generic_listeners){
-      tasks.push_back(BoundCallable<void(Key,bool)>(listener, (Key)key, is_press));
+    std::list<std::function<TaskStatus(void)>> tasks;
+    for(const Callback<Key,bool>& listener : generic_listeners){
+      tasks.push_back(generic_listener_task(listener, (Key)key, is_press));
     }
-    for(const CallablePtr<void(bool)>& listener : key_listeners[(Key)key]){
-      tasks.push_back(BoundCallable<void(bool)>(listener, is_press));
+    for(const Callback<bool>& listener : key_listeners[(Key)key]){
+      tasks.push_back(key_listener_task(listener, (Key)key, is_press));
     }
     if(is_press){
-      for(const CallablePtr<void(void)>& listener : keypress_listeners[(Key)key]){
-        tasks.push_back(listener);
+      for(const Callback<>& listener : keypress_listeners[(Key)key]){
+        tasks.push_back(keypress_listener_task(listener, (Key)key));
       }
     }
-    input_event_pool.add_tasks(tasks);
+    input_event_pool.add_tasks(std::move(tasks));
   }
 }
 
@@ -72,24 +105,24 @@ void Input::init(){
   }
 }
 
-void Input::addGenericListener(const CallablePtr<void(Key,bool)>& listener){
+void Input::addGenericListener(const Callback<Key,bool>& listener){
   generic_listeners.insert(listener);
 }
 
-void Input::removeGenericListener(const CallablePtr<void(Key,bool)>& listener){
+void Input::removeGenericListener(const Callback<Key,bool>& listener){
   generic_listeners.erase(listener);
 }
 
-void Input::addKeyListener(Key key,const CallablePtr<void(bool)>& listener){
+void Input::addKeyListener(Key key,const Callback<bool>& listener){
   key_listeners[key].insert(listener);
 }
-void Input::removeKeyListener(Key key,const CallablePtr<void(bool)>& listener){
+void Input::removeKeyListener(Key key,const Callback<bool>& listener){
   key_listeners[key].erase(listener);
 }
 
-void Input::addKeypressListener(Key key,const CallablePtr<void(void)>& listener){
+void Input::addKeypressListener(Key key,const Callback<>& listener){
   keypress_listeners[key].insert(listener);
 }
-void Input::removeKeypressListener(Key key,const CallablePtr<void(void)>& listener){
+void Input::removeKeypressListener(Key key,const Callback<>& listener){
   keypress_listeners[key].erase(listener);
 }
