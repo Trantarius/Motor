@@ -5,24 +5,24 @@
 struct GLFWwindow;
 
 class Window{
-  static Map<GLFWwindow*,Window*> ptr_map;
-  GLFWwindow* window=nullptr;
+  inline static GLFWwindow* window=nullptr;
 
   static GLFWwindow* make_new_window();
 
 public:
 
-  Input input{*this};
-  WindowRender render{*this};
+  //Input input{*this};
+  //WindowRender render{*this};
+  static WindowRender& render();
 
-  ivec2 getSize() const;
-  void setSize(ivec2 to);
+  static ivec2 getSize();
+  static void setSize(ivec2 to);
 
-  GLFWwindow* glfw() const{return window;}
+  static GLFWwindow* glfw() {return window;}
   static Window* fromGLFW(GLFWwindow*ptr);
 
-  Window();
-  Window(GLFWwindow*);
+  //Window();
+  //Window(GLFWwindow*);
 
-  friend void init();
+  //friend void init();
 };

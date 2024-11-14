@@ -16,5 +16,5 @@ using List = std::list<T>;
 template<typename K,typename V, typename Hash=std::hash<K>, typename Pred=std::equal_to<K>>
 using Map = std::unordered_map<K,V,Hash,Pred>;
 
-template<typename K,typename V, typename Hash=std::hash<K>, typename Pred=std::equal_to<K>>
-using Set = std::unordered_set<K,V,Hash,Pred>;
+template<typename K, typename Hash=std::hash<K>, typename Pred=std::equal_to<K>>
+using Set = std::unordered_set<K,Hash,Pred>;

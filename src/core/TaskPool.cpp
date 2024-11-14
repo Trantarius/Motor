@@ -66,50 +66,67 @@ bool Task::attempt(){
 		}
 	}
 
-	(call)();
+	call.try_call();
 
 	return true;
 }
 
-void TaskPool::add_task(std::unique_ptr<Task>&& task){
-#ifndef NDEBUG
-	if(!task)
-		throw std::logic_error("cannot add null task");
-	if(!(task->call))
-		throw std::logic_error("cannot add a task without a callable");
-#endif
+void TaskPool::add_tasks(const std::list<Task>& ts){
 	std::scoped_lock lock(mtx);
-	tasks.push_back(std::move(task));
-	empty_wait_sema.release();
+	for(const Task& tk : ts){
+		#ifndef NDEBUG
+			if(!(tk.call))
+				throw std::logic_error("cannot add a task without a callable");
+		#endif
+		tasks.push_back(tk);
+	}
+	empty_wait_sema.release(ts.size());
+}
+
+void TaskPool::add_tasks(std::list<Task>&& ts){
+	std::scoped_lock lock(mtx);
+	size_t count = ts.size();
+	tasks.splice(tasks.end(), std::move(ts));
+	empty_wait_sema.release(count);
+}
+
+void TaskPool::add_tasks(const std::list<CallablePtr<void(void)>>& ts){
+	std::scoped_lock lock(mtx);
+	for(const CallablePtr<void(void)>& tk : ts){
+		#ifndef NDEBUG
+			if(!(tk))
+				throw std::logic_error("cannot add a task without a callable");
+		#endif
+		tasks.push_back(tk);
+	}
+	empty_wait_sema.release(ts.size());
 }
 
 void TaskPool::add_task(const Task& call){
-	add_task(std::make_unique<Task>(call));
+#ifndef NDEBUG
+	if(!(call.call))
+		throw std::logic_error("cannot add a task without a callable");
+#endif
+	tasks.push_back(call);
+	empty_wait_sema.release();
 }
 void TaskPool::add_task(Task&& call){
-	add_task(std::make_unique<Task>(std::move(call)));
-}
-
-void TaskPool::add_task(const std::function<void(void)>& call){
-	add_task(std::make_unique<Task>(call));
-}
-void TaskPool::add_task(std::function<void(void)>&& call){
-	add_task(std::make_unique<Task>(std::move(call)));
+#ifndef NDEBUG
+	if(!(call.call))
+		throw std::logic_error("cannot add a task without a callable");
+#endif
+	tasks.push_back(std::move(call));
+	empty_wait_sema.release();
 }
 
 size_t TaskPool::queue_size() const{
 	std::scoped_lock lock(mtx);
-	return tasks.size();
-}
-
-bool TaskPool::empty() const{
-	std::scoped_lock lock(mtx);
-	return tasks.size()==0 && in_progress==0;
+	return tasks.size() + in_progress;
 }
 
 bool TaskPool::do_one_task(){
 
-	std::unique_ptr<Task> next;
+	Task next;
 
 	{
 		std::scoped_lock lock(mtx);
@@ -120,14 +137,16 @@ bool TaskPool::do_one_task(){
 		in_progress++;
 	}
 
-	bool success = next->attempt();
+	bool success = next.attempt();
 
 	bool is_empty = false;
 	{
 		std::scoped_lock lock(mtx);
 		in_progress--;
-		if(!success)
+		if(!success){
 			tasks.push_back(std::move(next));
+			empty_wait_sema.release();
+		}
 		is_empty = tasks.size()==0 && in_progress==0;
 	}
 
@@ -138,13 +157,13 @@ bool TaskPool::do_one_task(){
 }
 
 void TaskPool::flush(){
-	while(!empty()){
+	while(queue_size()!=0){
 		do_one_task();
 	}
 }
 
 TaskPool::~TaskPool(){
-	assert(empty());
+	assert(queue_size()==0);
 }
 
 
@@ -158,7 +177,7 @@ void SingleThreadPool::work_loop(SingleThreadPool* pool){
 SingleThreadPool::SingleThreadPool() : thread(&work_loop, this) {}
 
 SingleThreadPool::~SingleThreadPool(){
-	assert(empty());
+	assert(queue_size()==0);
 	is_destructing = true;
 	thread.join();
 }
@@ -171,14 +190,14 @@ void SingleThreadPool::flush(){
 }
 
 
-void ThreadPool::work_loop(ThreadPool* pool){
+void MultiThreadPool::work_loop(MultiThreadPool* pool){
 	while(!pool->is_destructing){
 		pool->empty_wait_sema.acquire();
 		pool->do_one_task();
 	}
 }
 
-ThreadPool::ThreadPool() {
+MultiThreadPool::MultiThreadPool() {
 	size_t thread_count = std::thread::hardware_concurrency();
 	thread_count = thread_count > 4 ? thread_count : 4;
 	for(int n=0;n<thread_count;n++){
@@ -186,8 +205,8 @@ ThreadPool::ThreadPool() {
 	}
 }
 
-ThreadPool::~ThreadPool(){
-	assert(empty());
+MultiThreadPool::~MultiThreadPool(){
+	assert(queue_size()==0);
 	is_destructing = true;
 	empty_wait_sema.release(threads.size());
 	for( std::thread& t : threads){
@@ -195,7 +214,130 @@ ThreadPool::~ThreadPool(){
 	}
 }
 
-void ThreadPool::flush(){
+void MultiThreadPool::flush(){
+	std::unique_lock lk(mtx);
+	while(!(tasks.empty() && in_progress==0)){
+		empty_notifier.wait(lk);
+	}
+}
+
+
+void TaskCycle::recycle(){
+	std::scoped_lock lock(mtx);
+	size_t count = offhand.size();
+	tasks.splice(tasks.end(), std::move(offhand));
+	empty_wait_sema.release(count);
+}
+/*
+void TaskCycle::recycle_when_done(){
+	std::scoped_lock lock(mtx);
+	if(tasks.size()+in_progress == 0){
+		size_t count = offhand.size();
+		tasks.splice(tasks.end(), std::move(offhand));
+		empty_wait_sema.release(count);
+	}else{
+		recycle_when_done_count++;
+	}
+}
+*/
+
+size_t TaskCycle::offhand_size() const{
+	std::scoped_lock lock(mtx);
+	return offhand.size();
+}
+
+size_t TaskCycle::total_size() const{
+	std::scoped_lock lock(mtx);
+	return tasks.size()+offhand.size();
+}
+
+bool TaskCycle::do_one_task() {
+	Task next;
+
+	{
+		std::scoped_lock lock(mtx);
+		if(tasks.empty())
+			return false;
+		next = std::move(tasks.front());
+		tasks.pop_front();
+		in_progress++;
+	}
+
+	bool success = next.attempt();
+
+	bool is_empty = false;
+	{
+		std::scoped_lock lock(mtx);
+		in_progress--;
+		if(!success){
+			tasks.push_back(std::move(next));
+			empty_wait_sema.release();
+		}
+		else{
+			offhand.push_back(std::move(next));
+		}
+		is_empty = tasks.size()==0 && in_progress==0;
+		//if(is_empty && recycle_when_done_count>0){
+		//	size_t count = offhand.size();
+		//	tasks.splice(tasks.end(), std::move(offhand));
+		//	empty_wait_sema.release(count);
+		//	recycle_when_done_count--;
+		//}
+	}
+
+	if(is_empty)
+		empty_notifier.notify_all();
+
+	return success;
+}
+
+void SingleThreadCycle::work_loop(SingleThreadCycle* pool){
+	while(!pool->is_destructing){
+		pool->empty_wait_sema.acquire();
+		pool->do_one_task();
+	}
+}
+
+SingleThreadCycle::SingleThreadCycle() : thread(&work_loop, this) {}
+
+SingleThreadCycle::~SingleThreadCycle(){
+	assert(queue_size()==0);
+	is_destructing = true;
+	thread.join();
+}
+
+void SingleThreadCycle::flush(){
+	std::unique_lock lk(mtx);
+	while(!(tasks.empty() && in_progress==0)){
+		empty_notifier.wait(lk);
+	}
+}
+
+void MultiThreadCycle::work_loop(MultiThreadCycle* pool){
+	while(!pool->is_destructing){
+		pool->empty_wait_sema.acquire();
+		pool->do_one_task();
+	}
+}
+
+MultiThreadCycle::MultiThreadCycle() {
+	size_t thread_count = std::thread::hardware_concurrency();
+	thread_count = thread_count > 4 ? thread_count : 4;
+	for(int n=0;n<thread_count;n++){
+		threads.emplace_back(&work_loop, this);
+	}
+}
+
+MultiThreadCycle::~MultiThreadCycle(){
+	assert(queue_size()==0);
+	is_destructing = true;
+	empty_wait_sema.release(threads.size());
+	for( std::thread& t : threads){
+		t.join();
+	}
+}
+
+void MultiThreadCycle::flush(){
 	std::unique_lock lk(mtx);
 	while(!(tasks.empty() && in_progress==0)){
 		empty_notifier.wait(lk);

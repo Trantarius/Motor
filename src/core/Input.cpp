@@ -13,7 +13,7 @@ bool Input::getKey(Key key){
 
 void Input::setCursorMode(CursorMode to){
   cursorMode=to;
-  glfwSetInputMode(window.glfw(),GLFW_CURSOR,to);
+  glfwSetInputMode(Window::glfw(),GLFW_CURSOR,to);
 }
 Input::CursorMode Input::getCursorMode(){
   return cursorMode;
@@ -34,33 +34,36 @@ void Input::update(){
 
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
   if(action==GLFW_PRESS){
-    Window::fromGLFW(window)->input.keyStates[(Key)key]=true;
-    Window::fromGLFW(window)->input.generic_listeners.cycle((Key)key,true);
-    Window::fromGLFW(window)->input.key_listeners[(Key)key].cycle(true);
-    Window::fromGLFW(window)->input.keypress_listeners[(Key)key].cycle();
-  }else if(action==GLFW_RELEASE){
-    Window::fromGLFW(window)->input.keyStates[(Key)key]=false;
-    Window::fromGLFW(window)->input.generic_listeners.cycle((Key)key,false);
-    Window::fromGLFW(window)->input.key_listeners[(Key)key].cycle(false);
+    bool is_press = action==GLFW_PRESS;
+    keyStates[(Key)key]=is_press;
+    List<CallablePtr<void(void)>> tasks;
+    for(const CallablePtr<void(Key,bool)>& listener : generic_listeners){
+      tasks.push_back(BoundCallable<void(Key,bool)>(listener, (Key)key, is_press));
+    }
+    for(const CallablePtr<void(bool)>& listener : key_listeners[(Key)key]){
+      tasks.push_back(BoundCallable<void(bool)>(listener, is_press));
+    }
+    if(is_press){
+      for(const CallablePtr<void(void)>& listener : keypress_listeners[(Key)key]){
+        tasks.push_back(listener);
+      }
+    }
+    input_event_pool.add_tasks(tasks);
   }
 }
 
 void Input::cursorPosCallback(GLFWwindow* window, double xpos, double ypos){
-  Window::fromGLFW(window)->input.mouse_pos=fvec2(xpos,ypos);
+  mouse_pos = fvec2(xpos,ypos);
 }
 
 void Input::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods){
-  if(action==GLFW_PRESS){
-    Window::fromGLFW(window)->input.keyStates[(Key)button]=true;
-  }else if(action==GLFW_RELEASE){
-    Window::fromGLFW(window)->input.keyStates[(Key)button]=false;
-  }
+  keyStates[(Key)button]=(action==GLFW_PRESS);
 }
 
 
-Input::Input(Window& win):window(win){
-  glfwSetKeyCallback(window.glfw(),Input::keyCallback);
-  glfwSetCursorPosCallback(window.glfw(),Input::cursorPosCallback);
+void Input::init(){
+  glfwSetKeyCallback(Window::glfw(),Input::keyCallback);
+  glfwSetCursorPosCallback(Window::glfw(),Input::cursorPosCallback);
 
   for(auto pr : keyNames){
     keyStates.emplace(pr.first,false);
@@ -69,24 +72,24 @@ Input::Input(Window& win):window(win){
   }
 }
 
-void Input::addGenericListener(SafeFunc<void(Key,bool)> listener){
-  generic_listeners.add(listener);
+void Input::addGenericListener(const CallablePtr<void(Key,bool)>& listener){
+  generic_listeners.insert(listener);
 }
 
-void Input::removeGenericListener(SafeFunc<void(Key,bool)> listener){
-  generic_listeners.remove(listener);
+void Input::removeGenericListener(const CallablePtr<void(Key,bool)>& listener){
+  generic_listeners.erase(listener);
 }
 
-void Input::addKeyListener(Key key,SafeFunc<void(bool)> listener){
-  key_listeners[key].add(listener);
+void Input::addKeyListener(Key key,const CallablePtr<void(bool)>& listener){
+  key_listeners[key].insert(listener);
 }
-void Input::removeKeyListener(Key key,SafeFunc<void(bool)> listener){
-  key_listeners[key].remove(listener);
+void Input::removeKeyListener(Key key,const CallablePtr<void(bool)>& listener){
+  key_listeners[key].erase(listener);
 }
 
-void Input::addKeypressListener(Key key,SafeFunc<void(void)> listener){
-  keypress_listeners[key].add(listener);
+void Input::addKeypressListener(Key key,const CallablePtr<void(void)>& listener){
+  keypress_listeners[key].insert(listener);
 }
-void Input::removeKeypressListener(Key key,SafeFunc<void(void)> listener){
-  keypress_listeners[key].remove(listener);
+void Input::removeKeypressListener(Key key,const CallablePtr<void(void)>& listener){
+  keypress_listeners[key].erase(listener);
 }

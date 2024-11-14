@@ -1,8 +1,6 @@
 #include "Window.hpp"
 #include "main.hpp"
 
-Map<GLFWwindow*,Window*> Window::ptr_map;
-
 ivec2 Window::getSize() const{
   int x,y;
   glfwGetWindowSize(window,&x,&y);
