@@ -2,12 +2,11 @@
 #include "core/Render.hpp"
 
 class OrbitCamera :public PerspectiveCamera, public std::enable_shared_from_this<OrbitCamera>{
-  void onEscapePress();
+	void onEscapePress();
 public:
-  float orbit_distance=5.0;
-  float speed=0.00001;
-  void update() ;
-  fmat4 getView() const override;
-  void init();
-  //OrbitCamera();
+	double orbit_distance=5.0;
+	double speed=0.00001;
+	void update() ;
+	fmat4 getView() const override;
+	void init();
 };

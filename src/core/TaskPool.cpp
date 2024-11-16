@@ -54,7 +54,6 @@ void TaskPool::do_one_task(){
 		in_progress++;
 	}
 
-	//bool success = next.attempt();
 	TaskStatus status = next();
 
 	bool is_empty = false;
@@ -149,18 +148,6 @@ void TaskCycle::recycle(){
 	tasks.splice(tasks.end(), std::move(offhand));
 	task_count_sema.release(count);
 }
-/*
-void TaskCycle::recycle_when_done(){
-	std::scoped_lock lock(mtx);
-	if(tasks.size()+in_progress == 0){
-		size_t count = offhand.size();
-		tasks.splice(tasks.end(), std::move(offhand));
-		task_count_sema.release(count);
-	}else{
-		recycle_when_done_count++;
-	}
-}
-*/
 
 size_t TaskCycle::offhand_size() const{
 	std::scoped_lock lock(mtx);
@@ -185,7 +172,6 @@ void TaskCycle::do_one_task() {
 		in_progress++;
 	}
 
-	//bool success = next.attempt();
 	TaskStatus status = next();
 
 	bool is_empty = false;

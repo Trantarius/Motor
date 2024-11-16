@@ -1,5 +1,4 @@
 #pragma once
-#include <cinttypes>
 #include <string>
 #include <stdexcept>
 #include <glad/glad.h>

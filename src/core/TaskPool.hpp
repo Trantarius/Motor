@@ -88,9 +88,6 @@ public:
 	void add_task(Task&&);
 	size_t queue_size() const;
 
-	// tries to do the next task; if the locks are obtained, the task is completed and then true is
-	// returned; otherwise, the locks are released and false is returned, and the task is moved
-	// to the back of the queue; if there are no tasks to do, returns false.
 	virtual void do_one_task();
 
 	// do tasks until there are none left; blocks until completion (even for multithreaded variants)
@@ -130,7 +127,6 @@ public:
 class TaskCycle : public TaskPool{
 protected:
 	std::list<Task> offhand;
-	//size_t recycle_when_done_count = 0;
 
 public:
 
@@ -141,13 +137,9 @@ public:
 	TaskCycle& operator=(TaskCycle&&)=delete;
 
 	void recycle();
-	//void recycle_when_done();
 	size_t offhand_size() const;
 	size_t total_size() const;
 
-	// tries to do the next task; if the locks are obtained, the task is completed and then true is
-	// returned; otherwise, the locks are released and false is returned, and the task is moved
-	// to the back of the queue; if there are no tasks to do, returns false.
 	virtual void do_one_task() override;
 };
 

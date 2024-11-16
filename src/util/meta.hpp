@@ -1,39 +1,4 @@
 #pragma once
-#include <concepts>
-#include <type_traits>
-#include <typeindex>
-#include <typeinfo>
-#include <cinttypes>
-
-template<typename T>
-struct AutoPassType{
-  typedef T& type;
-};
-
-template<typename T> requires std::is_arithmetic<T>::value || std::is_enum<T>::value
-struct AutoPassType<T>{
-  typedef T type;
-};
-
-template <typename T>
-struct AutoPassType<T*>{
-  typedef T* type;
-};
-
-template <typename T>
-struct AutoPassType<T&>{
-  typedef T& type;
-};
-
-template <typename T>
-concept NumberType = std::integral<T> || std::floating_point<T>;
-
-template<typename T>
-concept IntegralType = std::integral<T>;
-
-template<typename T>
-concept FloatType = std::floating_point<T>;
-
 
 #define STRINGIZE(arg)  #arg
 

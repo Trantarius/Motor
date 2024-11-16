@@ -12,33 +12,33 @@
 class Texture;
 
 struct UniformBlockMember{
-  ID id;
-  string name;
-  int index;
-  int size;//for arrays
-  glEnum type;
+	ID id;
+	std::string name;
+	int index;
+	int size;//for arrays
+	glEnum type;
 
-  int offset;
-  int array_stride;
-  int matrix_stride;
+	int offset;
+	int array_stride;
+	int matrix_stride;
 };
 
 struct UniformBlock{
-  ID id;
-  string name;
-  int index;
-  int data_size;
+	ID id;
+	std::string name;
+	int index;
+	int data_size;
 
-  std::map<ID,UniformBlockMember> members;
+	std::map<ID,UniformBlockMember> members;
 };
 
 struct UniformInfo{
-  ID id;
-  string name;
-  int index;
-  int location;
-  int size;//for arrays
-  glEnum type;
+	ID id;
+	std::string name;
+	int index;
+	int location;
+	int size;//for arrays
+	glEnum type;
 };
 
 STRUCT_TO_STRING(UniformInfo,id,name,index,location,size,type)
@@ -49,43 +49,43 @@ class UniformBuffer;
 
 class Shader{
 
-  struct _Data{
-    uint refcount=0;
-    uint gl_program=0;
-    std::map<ID,UniformInfo> uniforms;
-    std::map<ID,UniformBlock> uniform_blocks;
-  };
+	struct _Data{
+		uint refcount=0;
+		uint gl_program=0;
+		std::map<ID,UniformInfo> uniforms;
+		std::map<ID,UniformBlock> uniform_blocks;
+	};
 
-  REF_COUNTER(Shader,_Data)
+	REF_COUNTER(Shader,_Data)
 
 public:
 
-  struct CompileError : public std::runtime_error{
-    CompileError(string what):std::runtime_error(what){}
-  };
+	struct CompileError : public std::runtime_error{
+		CompileError(std::string what):std::runtime_error(what){}
+	};
 
-  Shader(string vertex_shader,string fragment_shader);
+	Shader(std::string vertex_shader,std::string fragment_shader);
 
-  void use() const;
+	void use() const;
 
-  template<typename T>
-  void setUniform(ID name,T val);
+	template<typename T>
+	void setUniform(ID name,T val);
 
-  template<typename T>
-  void setUniformArray(ID name,const Bloc<T> vals);
+	template<typename T>
+	void setUniformArray(ID name,const Bloc<T> vals);
 
-  void setUniformBlock(ID name,UniformBuffer buffer);
+	void setUniformBlock(ID name,UniformBuffer buffer);
 
-  std::vector<UniformInfo> getUniforms() const;
-  UniformInfo getUniform(ID id) const;
-  bool hasUniform(ID id) const;
-  std::vector<UniformBlock> getUniformBlocks() const;
-  UniformBlock getUniformBlock(ID id) const;
-  bool hasUniformBlock(ID id) const;
+	std::vector<UniformInfo> getUniforms() const;
+	UniformInfo getUniform(ID id) const;
+	bool hasUniform(ID id) const;
+	std::vector<UniformBlock> getUniformBlocks() const;
+	UniformBlock getUniformBlock(ID id) const;
+	bool hasUniformBlock(ID id) const;
 
-  // recursively load all shader files (*.glsl) found at path into named strings for #include directives
-  // names will be relative to path
-  static void loadAllShaderFiles(string path);
+	// recursively load all shader files (*.glsl) found at path into named strings for #include directives
+	// names will be relative to path
+	static void loadAllShaderFiles(std::string path);
 };
 
 template <> void Shader::setUniform(ID name,float val);
@@ -136,34 +136,34 @@ template <> void Shader::setUniformArray(ID name,const Bloc<Texture> val);
 
 class UniformBuffer{
 
-  static IndexDistributor binding_distributor;
+	static IndexDistributor binding_distributor;
 
-  struct _Data{
-    uint refcount=0;
-    uint buffer;
-    int binding=-1;
-    UniformBlock block;
-    Bloc<void> update_data;
-  };
+	struct _Data{
+		uint refcount=0;
+		uint buffer;
+		int binding=-1;
+		UniformBlock block;
+		Bloc<void> update_data;
+	};
 
-  REF_COUNTER(UniformBuffer,_Data)
+	REF_COUNTER(UniformBuffer,_Data)
 
 public:
 
-  UniformBuffer(const UniformBlock& block);
+	UniformBuffer(const UniformBlock& block);
 
-  void beginUpdate();
-  void endUpdate();
+	void beginUpdate();
+	void endUpdate();
 
-  UniformBlock getUniformBlock() const;
+	UniformBlock getUniformBlock() const;
 
-  template<typename T>
-  void setUniform(ID name,T val);
+	template<typename T>
+	void setUniform(ID name,T val);
 
-  template<typename T>
-  void setUniformArray(ID name,const Bloc<T> vals);
+	template<typename T>
+	void setUniformArray(ID name,const Bloc<T> vals);
 
-  friend void Shader::setUniformBlock(ID id,UniformBuffer buffer);
+	friend void Shader::setUniformBlock(ID id,UniformBuffer buffer);
 };
 
 template <> void UniformBuffer::setUniform(ID name,float val);

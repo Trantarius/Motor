@@ -9,15 +9,15 @@
 #include <GLFW/glfw3.h>
 
 void openGLDebugCallback(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar* message, const void* userparam){
-  if(severity==GL_DEBUG_SEVERITY_NOTIFICATION){
-    return;
-  }
-  printerr("GLDebug:");
-  printerr("\tsource: "+glEnumName(source));
-  printerr("\ttype: "+glEnumName(type));
-  printerr("\tid: ",id);
-  printerr("\tseverity: "+glEnumName(severity));
-  printerr("\tmessage: ",message);
+	if(severity==GL_DEBUG_SEVERITY_NOTIFICATION){
+		return;
+	}
+	printerr("GLDebug:");
+	printerr("\tsource: "+glEnumName(source));
+	printerr("\ttype: "+glEnumName(type));
+	printerr("\tid: ",id);
+	printerr("\tseverity: "+glEnumName(severity));
+	printerr("\tmessage: ",message);
 }
 
 void Engine::init(){
@@ -26,14 +26,12 @@ void Engine::init(){
 	}
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-  GLFWwindow* win = glfwCreateWindow(1024,600,"Hello",NULL,NULL);
-  assert(win);
-
-	//GLFWwindow* winptr=Window::make_new_window();
+	GLFWwindow* win = glfwCreateWindow(1024,600,"Hello",NULL,NULL);
+	assert(win);
 
 	glfwMakeContextCurrent(win);
 	glfwSwapInterval(1);//enable Vsync
@@ -55,40 +53,37 @@ void Engine::init(){
 
 
 	Window::init(win);
-  Input::init();
+	Input::init();
 }
 
 void Engine::mainLoop(){
 
-  size_t frame_counter=0;
-  double last_frame=Time::now();
+	size_t frame_counter=0;
+	double last_frame=Time::now();
 
-  while(!is_quitting){
-    glfwPollEvents();
-    Input::update();
-    //input->update();
-    //updater->cycle(updater);
-    //render->cycle(render);
-    frame_cycle.flush();
-    frame_cycle.recycle();
-    Window::viewport().render();
-    if(glfwWindowShouldClose(Window::glfw())){
-      quit();
-    }
+	while(!is_quitting){
+		glfwPollEvents();
+		Input::update();
+		frame_cycle.flush();
+		frame_cycle.recycle();
+		Window::viewport().render();
+		if(glfwWindowShouldClose(Window::glfw())){
+			quit();
+		}
 
-    frame_counter++;
-    double now=Time::now();
-    Engine::dT = now-last_frame;
-    if(now-last_frame>1.0){
-      last_frame=now;
-      frame_counter=0;
-    }
-  }
+		frame_counter++;
+		double now=Time::now();
+		Engine::dT = now-last_frame;
+		if(now-last_frame>1.0){
+			last_frame=now;
+			frame_counter=0;
+		}
+	}
 }
 
 void Engine::terminate(){
-  frame_cycle.flush();
-  glfwTerminate();
+	frame_cycle.flush();
+	glfwTerminate();
 }
 
 void Engine::quit(){
