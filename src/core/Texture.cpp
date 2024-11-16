@@ -11,7 +11,7 @@ void Texture::onDestroy(){
   unitcounter.releaseIndex(data->unit);
 }
 
-template<NumberType T>
+template<typename T>
 Texture::Texture(ivec3 size, int channel_count, T* texdata):Texture(){
 
   assert(channel_count>0 && channel_count<=4);
@@ -115,7 +115,7 @@ bool Texture::getMipmapped() const{
   return data->mipmapped;
 }
 
-Texture Texture::readPNG(string path){
+Texture Texture::readPNG(std::string path){
 
   int width=0,height=0,components=0;
   ushort * data=stbi_load_16(path.c_str(),&width,&height,&components,0);

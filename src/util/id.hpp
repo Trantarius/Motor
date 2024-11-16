@@ -1,5 +1,5 @@
 #pragma once
-#include <cinttypes>
+#include <cstdint>
 #include <cstdlib>
 
 constexpr uint64_t const_hash(const char* ptr){

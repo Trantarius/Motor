@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 #include <stdexcept>
 #include "util/mat.hpp"
 #include "util/id.hpp"

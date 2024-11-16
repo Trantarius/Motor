@@ -13,7 +13,7 @@ class Input{
   inline static fvec2 mouse_vel{};
   inline static double last_update=0;
   inline static fvec2 last_mouse_pos{};
-  inline static Map<Key,bool> keyStates;
+  inline static std::map<Key,bool> keyStates;
   //inline static Window& window;
 
   inline static TaskPool input_event_pool;
@@ -27,7 +27,7 @@ class Input{
   static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
   static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 public:
-  static string keyName(Key key);
+  static std::string keyName(Key key);
   static bool getKey(Key key);
 
   static void setCursorMode(int to);

@@ -3,6 +3,7 @@
 #include "Spatial.hpp"
 #include "Light.hpp"
 #include "Shader.hpp"
+#include "util/math.hpp"
 #include <memory>
 #include <list>
 

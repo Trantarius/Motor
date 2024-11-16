@@ -53,11 +53,18 @@ dmat4 Transform::toMatrix() const{
     0,0,scale,0,
     0,  0,  0,  1
   );
-  mat=dmat4(quatMtx(rotation))*mat;
+  auto m3 = quatMtx(rotation);
+  dmat4 m4 {
+    m3[{0,0}], m3[{0,1}], m3[{0,2}], 0,
+    m3[{1,0}], m3[{1,1}], m3[{1,2}], 0,
+    m3[{2,0}], m3[{2,1}], m3[{2,2}], 0,
+    0,         0,         0,         1
+  };
+  mat=m4*mat;
 
-  mat[0][3]=position.x;
-  mat[1][3]=position.y;
-  mat[2][3]=position.z;
+  mat[{0,3}]=position.x;
+  mat[{1,3}]=position.y;
+  mat[{2,3}]=position.z;
   return mat;
 }
 

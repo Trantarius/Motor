@@ -21,7 +21,6 @@ def get_bool_option(name, default):
 		return default
 
 debug = get_bool_option('debug',False)
-print(debug)
 optimize = get_bool_option('optimize',False)
 
 # initial environment

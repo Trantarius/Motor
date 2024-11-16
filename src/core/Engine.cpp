@@ -61,7 +61,7 @@ void Engine::init(){
 void Engine::mainLoop(){
 
   size_t frame_counter=0;
-  double last_frame=time();
+  double last_frame=Time::now();
 
   while(!is_quitting){
     glfwPollEvents();
@@ -77,7 +77,7 @@ void Engine::mainLoop(){
     }
 
     frame_counter++;
-    double now=time();
+    double now=Time::now();
     Engine::dT = now-last_frame;
     if(now-last_frame>1.0){
       last_frame=now;
@@ -87,6 +87,7 @@ void Engine::mainLoop(){
 }
 
 void Engine::terminate(){
+  frame_cycle.flush();
   glfwTerminate();
 }
 

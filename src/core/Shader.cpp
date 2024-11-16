@@ -3,6 +3,8 @@
 #include "util/io.hpp"
 #include "defs/gl_defs.hpp"
 #include "Texture.hpp"
+#include <cstring>
+#include "util/print.hpp"
 
 namespace fs = std::filesystem;
 
@@ -473,7 +475,7 @@ template <> void UniformBuffer::setUniform(ID name,utype##M val){\
   for(int c=0;c<M;c++){\
     Bloc col_target=target;\
     for(int r=0;r<M;r++){\
-      auto e = val[r][c];\
+      auto e = val[{r,c}];\
       memcpy(col_target,&e,sizeof(e));\
       col_target=col_target+sizeof(e);\
     }\
@@ -494,7 +496,7 @@ template <> void UniformBuffer::setUniformArray(ID name,const Bloc<utype##M> val
     for(int c=0;c<M;c++){\
       Bloc col_target=mat_target;\
       for(int r=0;r<M;r++){\
-        auto e = vals[n][r][c];\
+        auto e = vals[n][{r,c}];\
         memcpy(col_target,&e,sizeof(e));\
         col_target=col_target+sizeof(e);\
       }\

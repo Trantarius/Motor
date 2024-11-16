@@ -1,7 +1,7 @@
 #include "gl_defs.hpp"
 #include <map>
 #include <string>
-#include "util/collections.hpp"
+#include <vector>
 using namespace std;
 
 multimap<long,string> _make_map();
@@ -9,7 +9,7 @@ const multimap<long,string> enum_map=_make_map();
 
 string glEnumName(long em){
   auto range=enum_map.equal_range(em);
-  Array<string> names;
+  std::vector<string> names;
   for(auto it=range.first;it!=range.second;it++){
     names.push_back(it->second);
   }

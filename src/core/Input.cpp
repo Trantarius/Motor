@@ -19,7 +19,7 @@ int Input::getCursorMode(){
 }
 
 void Input::update(){
-  double now=time();
+  double now=Time::now();
   fvec2 mrel=mouse_pos-last_mouse_pos;
   double dt=now-last_update;
   fvec2 mvel=mrel/dt;

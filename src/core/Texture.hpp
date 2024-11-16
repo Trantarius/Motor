@@ -28,7 +28,7 @@ private:
 
 public:
 
-  template<NumberType T>
+  template<typename T>
   Texture(ivec3 size, int channel_count, T* texdata);
 
   void setFilter(Filter filter);
@@ -41,5 +41,5 @@ public:
   glEnum getType() const;
   int getUnit() const;
 
-  static Texture readPNG(string path);
+  static Texture readPNG(std::string path);
 };

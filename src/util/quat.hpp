@@ -16,20 +16,21 @@ typedef vec<double,4> dquat;
 
 #define QUAT(T) vec<T,4>
 
-template<NumberType T>
+template<typename T>
 QUAT(T) quat(const vec<T,3>& axis,T theta){
   QUAT(T) ret;
   ret.w=cos(theta/2);
-  ret.xyz=axis*sin(theta/2);
+  ret = {axis*sin(theta/2), ret.w};
+  //ret.xyz=axis*sin(theta/2);
   return ret;
 }
 
-template<NumberType T>
+template<typename T>
 constexpr QUAT(T) quatIdentity(){
   return QUAT(T)(0,0,0,1);
 }
 
-template<NumberType A,NumberType B>
+template<typename A,typename B>
 QUAT(decltype(A()*B())) quatMul (const QUAT(A)& a,const QUAT(B)& b){
   //https://en.wikipedia.org/wiki/Quaternion#Hamilton_product
   return QUAT(decltype(A()*B()))(
@@ -40,27 +41,27 @@ QUAT(decltype(A()*B())) quatMul (const QUAT(A)& a,const QUAT(B)& b){
   );
 }
 
-template<NumberType T>
+template<typename T>
 QUAT(T) quatConj(const QUAT(T)& q){
   return QUAT(T)(-q.x,-q.y,-q.z,q.w);
 }
 
-template<NumberType T>
+template<typename T>
 QUAT(T) quatInv(const QUAT(T)& q){
   return quatConj(q)/lensqr(q);
 }
 
-template<NumberType A,NumberType B>
+template<typename A,typename B>
 #define R decltype(A()*B())
 vec<R,3> quatRot(const QUAT(A)& q,const vec<B,3>& v){
   QUAT(B) p(v,0);
   QUAT(R) ret=quatMul(quatMul(q,p),quatInv(q));
-  return ret.xyz;
+  return {ret.x,ret.y,ret.z};
 }
 #undef R
 
-template<NumberType T>
-mat<T,3> quatMtx(const QUAT(T)& q){
+template<typename T>
+mat<T,3,3> quatMtx(const QUAT(T)& q){
   //https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Conversion_to_and_from_the_matrix_representation
   T s=2.0/lensqr(q);
   T a=q.w, b=q.x, c=q.y,d=q.z;
@@ -70,7 +71,7 @@ mat<T,3> quatMtx(const QUAT(T)& q){
   T bb = b*bs; T bc = b*cs; T bd = b*ds;
   T cc = c*cs; T cd = c*ds; T dd = d*ds;
 
-  return mat<T,3>(
+  return mat<T,3,3>(
     1-cc-dd,    bc-ad,    bd+ac,
     bc+ad,    1-bb-dd,    cd-ab,
     bd-ac,    cd+ab,    1-bb-cc

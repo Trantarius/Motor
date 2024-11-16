@@ -15,13 +15,20 @@ struct Bloc{
 
   Bloc(){}
   Bloc(decltype(nullptr)){}
-  Bloc(size_t size):ptr(new T[size]{}),size(size){}
+  Bloc(size_t size):size(size){
+    ptr = (T*)(malloc(size*sizeof(T)));
+    new(ptr) T[size]{};
+    //ptr = new T[size]{};
+  }
   Bloc(T* ptr, size_t size):ptr(ptr),size(size){}
   Bloc(Bloc& b):ptr(b.ptr),size(b.size){}
   template<typename...Ts> requires (std::is_same<Ts,T>::value && ...)
   Bloc(T a,Ts...args){
-    ptr=new T[sizeof...(args)+1]{a,args...};
     size=sizeof...(args)+1;
+    ptr = (T*)(malloc(size*sizeof(T)));
+    new(ptr) T[size]{a,args...};
+
+    //ptr=new T[sizeof...(args)+1]{a,args...};
   }
 
   operator T*(){return ptr;}
@@ -54,7 +61,11 @@ struct Bloc{
 
   void destroy(){
     assert(ptr!=nullptr);
-    delete [] ptr;
+    for(size_t i=0;i<size;i++){
+      ((T*)ptr+i)->~T();
+    }
+    //delete [] ptr;
+    free(ptr);
     ptr=nullptr;
     size=0;
   }
@@ -82,7 +93,8 @@ template <> struct Bloc<void>{
 
   void destroy(){
     assert(ptr!=nullptr);
-    delete [] ptr;
+    free(ptr);
+    //delete [] ptr;
     ptr=nullptr;
     size=0;
   }

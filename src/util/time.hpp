@@ -1,19 +1,21 @@
 #pragma once
-#include <chrono>
-#include <cassert>
+#include <string>
+#include <cstdint>
 
-const std::chrono::steady_clock::time_point engine_start_time = std::chrono::steady_clock::now();
+namespace Time{
 
-inline double time(){
-  auto now=std::chrono::steady_clock::now();
-  std::chrono::duration<double> ret = now - engine_start_time;
-  return ret.count();
-}
+	double now();
+	uint64_t now_s();
+	uint64_t now_ms();
+	uint64_t now_us();
+	uint64_t now_ns();
 
-inline uint64_t nanotime(){
-  assert(std::chrono::steady_clock::period::den>=1000000000);
-  auto now=std::chrono::steady_clock::now();
-  std::chrono::steady_clock::duration diff = now - engine_start_time;
-  std::chrono::nanoseconds ret = std::chrono::duration_cast<std::chrono::nanoseconds>(diff);
-  return ret.count();
+	std::string format(double time);
+	std::string format_h(double time);
+	std::string format_m(double time);
+	std::string format_s(double time);
+	std::string format_ms(double time);
+	std::string format_us(double time);
+	std::string format_ns(double time);
+	std::string format_hhmmss(double time);
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "util/strings.hpp"
-#include "util/math.hpp"
+#include "util/vec.hpp"
+#include "util/quat.hpp"
 
 struct Transform{
   dvec3 position{0,0,0};

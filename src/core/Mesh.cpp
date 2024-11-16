@@ -266,8 +266,7 @@ MeshData MeshData::readOBJ(string path){
       faces.push_back(face);
     }
   }
-  typedef bool (*compType)(ivec3,ivec3);
-  std::map<ivec3,size_t,compType> cornermap(compare);
+  std::map<ivec3,size_t> cornermap;
   std::vector<ivec3> elements;
 
   for(std::vector<ivec3>& face : faces){

@@ -1,7 +1,7 @@
 #pragma once
-#include "util/collections.hpp"
 #include <string>
-using std::string;
+#include <map>
+
 
 enum Key{
  UNKNOWN=-1,
@@ -136,7 +136,7 @@ enum Key{
  MOUSE_MIDDLE=2,
 };
 
-const Map<Key,string> keyNames{
+const std::map<Key,std::string> keyNames{
 {Key::UNKNOWN,"UNKNOWN"},
 {Key::SPACE,"SPACE"},
 {Key::APOSTROPHE,"APOSTROPHE"},
