@@ -1,7 +1,8 @@
 #pragma once
 #include "core/Render.hpp"
+#include "core/Object.hpp"
 
-class OrbitCamera :public PerspectiveCamera, public std::enable_shared_from_this<OrbitCamera>{
+class OrbitCamera :public PerspectiveCamera, public Object{
 	void onEscapePress();
 public:
 	double orbit_distance=5.0;
@@ -9,4 +10,5 @@ public:
 	void update() ;
 	fmat4 getView() const override;
 	void init();
+	OrbitCamera();
 };

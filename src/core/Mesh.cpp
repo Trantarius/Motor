@@ -2,6 +2,7 @@
 #include "util/io.hpp"
 #include "defs/gl_defs.hpp"
 #include "Window.hpp"
+#include "Render.hpp"
 #include <map>
 
 MeshData::MeshData(Bloc<fvec3> verts):MeshData(_ref_count_init()){
@@ -120,7 +121,7 @@ void MeshData::draw(uint mode) const {
 	checkGLError();
 }
 
-void Mesh::render(int mode) {
+void Mesh::render() {
 	if(!shader.isNull() && !mesh_data.isNull()){
 		shader.use();
 		shader.setUniform("model"_id,(fmat4)transform.toMatrix());

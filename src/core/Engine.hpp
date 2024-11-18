@@ -7,7 +7,9 @@ class Engine{
 public:
 
 	inline static bool print_fps = false;
-	inline static TaskCycle frame_cycle;
+
+	inline static TaskPool main_thread;
+	inline static CallbackList<> frame_cycle;
 
 	static void init();
 	static void mainLoop();

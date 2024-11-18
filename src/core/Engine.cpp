@@ -63,8 +63,8 @@ void Engine::mainLoop(){
 
 	while(!is_quitting){
 		glfwPollEvents();
-		frame_cycle.flush();
-		frame_cycle.recycle();
+		frame_cycle.dumpInto(main_thread);
+		main_thread.flush();
 		Window::viewport().render();
 		if(glfwWindowShouldClose(Window::glfw())){
 			quit();
@@ -82,7 +82,7 @@ void Engine::mainLoop(){
 }
 
 void Engine::terminate(){
-	frame_cycle.flush();
+	main_thread.flush();
 	glfwTerminate();
 }
 

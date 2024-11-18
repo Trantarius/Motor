@@ -6,6 +6,7 @@
 #include <memory>
 #include <list>
 #include <numbers>
+#include "TaskPool.hpp"
 
 struct Camera : public Spatial{
 	virtual fmat4 getProjection(ivec2 vp_size) const=0;
@@ -26,9 +27,6 @@ struct OrthographicCamera : public Camera{
 	fmat4 getProjection(ivec2 vp_size) const override;
 };
 
-struct Renderable{
-	virtual void render(int mode) = 0;
-};
 
 
 class Viewport{
@@ -48,7 +46,8 @@ protected:
 public:
 	int mode = 0;
 
-	std::list<std::weak_ptr<Renderable>> objects;
+	CallbackList<> pre_render_cycle;
+	CallbackList<> render_cycle;
 
 	const fmat4& projection=current_projection;
 	const fmat4& view=current_view;

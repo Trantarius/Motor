@@ -1,8 +1,9 @@
 #pragma once
 #include "Shader.hpp"
-#include "Render.hpp"
 #include "util/refcount.hpp"
 #include "util/Bloc.hpp"
+#include "Object.hpp"
+#include "Spatial.hpp"
 
 class MeshData{
 	struct _Data{
@@ -25,8 +26,9 @@ public:
 	static MeshData readOBJ(std::string path);
 };
 
-struct Mesh : public Renderable, public virtual Spatial{
-	void render(int) override;
+struct Mesh : public Object{
+	Transform transform;
+	void render();
 	MeshData mesh_data;
 	Shader shader;
 

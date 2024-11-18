@@ -4,6 +4,10 @@
 void Viewport::render(){
 	preRender();
 
+	TaskPool pool;
+	pre_render_cycle.dumpInto(pool);
+	pool.flush();
+
 	assert(camera!=nullptr);
 	current_projection=camera->getProjection(size);
 	current_view=camera->getView();
@@ -44,16 +48,8 @@ void Viewport::render(){
 	_light_buffer.setUniformArray("light_types"_id,Bloc(types,8));
 	_light_buffer.endUpdate();
 
-
-	for(auto it=objects.begin();it!=objects.end();){
-		std::shared_ptr<Renderable> strong = it->lock();
-		if(!strong){
-			it=objects.erase(it);
-			continue;
-		}
-		strong->render(mode);
-		it++;
-	}
+	render_cycle.dumpInto(pool);
+	pool.flush();
 
 	postRender();
 }

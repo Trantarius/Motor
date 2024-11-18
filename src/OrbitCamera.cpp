@@ -1,6 +1,7 @@
 #include "OrbitCamera.hpp"
 #include "core/Input.hpp"
 #include "core/Engine.hpp"
+#include "core/Window.hpp"
 
 
 void OrbitCamera::update(){
@@ -26,6 +27,7 @@ void OrbitCamera::onEscapePress(){
 	Engine::quit();
 }
 
-void OrbitCamera::init(){
-	Input::keypress_listeners[Key::ESCAPE].add(Callback<>::from<OrbitCamera,&OrbitCamera::onEscapePress>(shared_from_this()));
+OrbitCamera::OrbitCamera(){
+	Window::viewport().pre_render_cycle.add(CALLBACK(*this,OrbitCamera::update));
+	Input::keypress_listeners[Key::ESCAPE].add(CALLBACK(*this,OrbitCamera::onEscapePress));
 }

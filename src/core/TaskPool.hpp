@@ -6,6 +6,7 @@
 #include <condition_variable>
 #include <functional>
 #include <set>
+#include "Object.hpp"
 
 enum TaskStatus{
 	TASK_DONE, TASK_EXPIRED, TASK_DEFER
@@ -130,8 +131,10 @@ enum CallbackResponse{
 
 template<typename...Args>
 class Callback{
-	std::weak_ptr<void> obj;
-	CallbackResponse (*fptr)(void*,Args...) = nullptr;
+	std::shared_ptr<Object*> obj;
+	CallbackResponse (*fptr)(Object*,Args...) = nullptr;
+	template<typename T,T t>
+	friend class _mk_callback;
 public:
 	Callback()=default;
 	Callback(const Callback&)=default;
@@ -155,35 +158,37 @@ public:
 	bool operator<=(const Callback&) const = default;
 	bool operator>=(const Callback&) const = default;
 	CallbackResponse operator()(Args...args) const{
-		std::shared_ptr<void> strong = obj.lock();
-		if(strong && fptr)
-			return fptr(strong.get(),std::forward<Args>(args)...);
+		if(obj && *obj)
+			return fptr(*obj,std::forward<Args>(args)...);
 		return CALLBACK_EXPIRED;
 	}
+};
 
-	template<typename Class, void(Class::*FPTR)(Args...)>
-	static Callback from(std::shared_ptr<Class> obj){
+template<typename T, T t>
+struct _mk_callback;
+
+template<typename Class, typename...Args, typename Ret, Ret(Class::*FPTR)(Args...)> requires std::derived_from<Class,Object>
+struct _mk_callback<Ret(Class::*)(Args...),FPTR>{
+	static Callback<Args...> make(const Object& obj){
 		Callback ret;
-		ret.obj = obj;
-		static constexpr auto func = [](void* ptr, Args...args){
-			(static_cast<Class*>(ptr)->*FPTR)(std::forward(args)...);
+		ret.obj = obj.self_ptr;
+		static constexpr auto ign_ret_func = [](Object* ptr, Args...args){
+			(dynamic_cast<Class*>(ptr)->*FPTR)(std::forward(args)...);
 			return CALLBACK_DONE;
 		};
-		ret.fptr = func;
-		return ret;
-	}
-
-	template<typename Class, CallbackResponse(Class::*FPTR)(Args...)>
-	static Callback from(std::shared_ptr<Class> obj){
-		Callback ret;
-		ret.obj = obj;
-		static constexpr auto func = [](void* ptr, Args...args){
-			return (static_cast<Class*>(ptr)->*FPTR)(std::forward(args)...);
+		static constexpr auto use_ret_func = [](Object* ptr, Args...args){
+			(dynamic_cast<Class*>(ptr)->*FPTR)(std::forward(args)...);
+			return CALLBACK_DONE;
 		};
-		ret.fptr = func;
+		if constexpr(std::same_as<Ret,CallbackResponse>)
+			ret.fptr = use_ret_func;
+		else
+			ret.fptr = ign_ret_func;
 		return ret;
 	}
 };
+
+#define CALLBACK(OBJECT,METHOD) _mk_callback<decltype(&METHOD),&METHOD>::make(OBJECT)
 
 template<typename...Args>
 class CallbackList{
@@ -227,6 +232,5 @@ public:
 	}
 
 	CallbackList()=default;
-	//CallbackList(const CallbackList& b):list(b.list){}
 	CallbackList(CallbackList&& b):list(std::move(b.list)){}
 };
