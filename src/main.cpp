@@ -8,6 +8,9 @@
 int main(){
 	Engine::init();
 	{
+		Input::print_events=true;
+		Input::setCursorMode(GLFW_CURSOR_DISABLED);
+
 		std::shared_ptr<OrbitCamera> camera = std::make_shared<OrbitCamera>();
 		Window::viewport().camera = camera;
 		std::weak_ptr<OrbitCamera> weak_cam = camera;

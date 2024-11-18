@@ -5,13 +5,11 @@
 
 void OrbitCamera::update(){
 
-	dvec2 mrel = Input::getMouseVel()*Engine::dT;
-
-	dvec2 theta=mrel*speed;
+	dvec2 theta=Input::getMousePos()*speed;
 
 	dquat yrot=quat(dvec3(0,1,0),-theta.x);
 
-	rotation=quatMul(yrot,rotation);
+	rotation=quatMul(yrot,quatIdentity<double>());
 
 	dquat xrot=quat(quatRot(rotation,dvec3(1,0,0)),-theta.y);
 	rotation=quatMul(xrot,rotation);
@@ -29,5 +27,5 @@ void OrbitCamera::onEscapePress(){
 }
 
 void OrbitCamera::init(){
-	Input::addKeypressListener(Key::ESCAPE, Callback<>::from<OrbitCamera,&OrbitCamera::onEscapePress>(shared_from_this()));
+	Input::keypress_listeners[Key::ESCAPE].add(Callback<>::from<OrbitCamera,&OrbitCamera::onEscapePress>(shared_from_this()));
 }

@@ -1,12 +1,12 @@
 #include "Input.hpp"
 #include "Window.hpp"
-#include "util/time.hpp"
+#include "util/print.hpp"
 
 std::string Input::keyName(Key key){
 	return keyNames.at(key);
 }
 
-bool Input::getKey(Key key){
+bool Input::isKeyPressed(Key key){
 	return keyStates[key];
 }
 
@@ -18,111 +18,50 @@ int Input::getCursorMode(){
 	return cursor_mode;
 }
 
-void Input::update(){
-	double now=Time::now();
-	dvec2 mrel=mouse_pos-last_mouse_pos;
-	double dt=now-last_update;
-	dvec2 mvel=mrel/dt;
-	if(len(mvel)>10000){
-		mvel=dvec2(0,0);
-	}
-	mouse_vel=mvel;
-	last_update=now;
-	last_mouse_pos=mouse_pos;
-}
-
-std::function<TaskStatus(void)> generic_listener_task(const Callback<Key,bool>& listener, Key key, bool pressed){
-	static constexpr TaskStatus(*func)(Callback<Key,bool>,Key,bool) = [](Callback<Key,bool> callback, Key key, bool pressed){
-		CallbackResponse resp = callback(key,pressed);
-		if(resp==CALLBACK_EXPIRED){
-			Input::removeGenericListener(callback);
-		}
-		return TASK_DONE;
-	};
-	return std::bind(func,listener,key,pressed);
-}
-
-std::function<TaskStatus(void)> key_listener_task(const Callback<bool>& listener, Key key, bool pressed){
-	static constexpr TaskStatus(*func)(Callback<bool>,Key,bool) = [](Callback<bool> callback, Key key,bool pressed){
-		CallbackResponse resp = callback(pressed);
-		if(resp==CALLBACK_EXPIRED){
-			Input::removeKeyListener(key,callback);
-		}
-		return TASK_DONE;
-	};
-	return std::bind(func,listener,key,pressed);
-}
-
-std::function<TaskStatus(void)> keypress_listener_task(const Callback<>& listener, Key key){
-	static constexpr TaskStatus(*func)(Callback<>,Key) = [](Callback<> callback, Key key){
-		CallbackResponse resp = callback();
-		if(resp==CALLBACK_EXPIRED){
-			Input::removeKeypressListener(key,callback);
-		}
-		return TASK_DONE;
-	};
-	return std::bind(func,listener,key);
+void Input::handleEvent(int key,int action){
+	bool is_press = action==GLFW_PRESS;
+	Input::keyStates[(Key)key]=is_press;
+	generic_listeners.dumpInto(input_event_pool,(Key)key,is_press);
+	key_listeners[(Key)key].dumpInto(input_event_pool, is_press);
+	keypress_listeners[(Key)key].dumpInto(input_event_pool);
+	input_event_pool.flush();
 }
 
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
-	if(action==GLFW_PRESS){
-		bool is_press = action==GLFW_PRESS;
-		keyStates[(Key)key]=is_press;
-		std::list<std::function<TaskStatus(void)>> tasks;
-		for(const Callback<Key,bool>& listener : generic_listeners){
-			tasks.push_back(generic_listener_task(listener, (Key)key, is_press));
-		}
-		for(const Callback<bool>& listener : key_listeners[(Key)key]){
-			tasks.push_back(key_listener_task(listener, (Key)key, is_press));
-		}
-		if(is_press){
-			for(const Callback<>& listener : keypress_listeners[(Key)key]){
-				tasks.push_back(keypress_listener_task(listener, (Key)key));
-			}
-		}
-		input_event_pool.add_tasks(std::move(tasks));
-		input_event_pool.flush();
+	if(Input::print_events){
+		print("Input: keyCallback: key=",key," '",keyName((Key)key),"' scancode=",scancode," action=",action," (",action==GLFW_PRESS?"pressed":"released",") mods=",mods);
 	}
+	handleEvent(key,action);
 }
 
 void Input::cursorPosCallback(GLFWwindow* window, double xpos, double ypos){
-	mouse_pos = fvec2(xpos,ypos);
+	mouse_pos = dvec2(xpos,ypos);
 }
 
 void Input::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods){
-	keyStates[(Key)button]=(action==GLFW_PRESS);
+	if(Input::print_events){
+		print("Input: mouseButtonCallback: button=",button," '",keyName((Key)button),"' action=",action," (",action==GLFW_PRESS?"pressed":"released",") mods=",mods);
+	}
+	handleEvent(button,action);
 }
 
+void Input::scrollCallback(GLFWwindow* window, double x, double y){
+	if(Input::print_events){
+		print("Input: scrollCallback: x=",x," y=",y);
+	}
+}
 
 void Input::init(){
 	glfwSetKeyCallback(Window::glfw(),Input::keyCallback);
 	glfwSetCursorPosCallback(Window::glfw(),Input::cursorPosCallback);
+	glfwSetMouseButtonCallback(Window::glfw(),Input::mouseButtonCallback);
+	glfwSetScrollCallback(Window::glfw(),Input::scrollCallback);
 
 	for(auto pr : keyNames){
 		keyStates.emplace(pr.first,false);
-		key_listeners.emplace(pr.first,std::set<Callback<bool>>());
-		keypress_listeners.emplace(pr.first,std::set<Callback<>>());
+		key_listeners.emplace(pr.first,CallbackList<bool>());
+		keypress_listeners.emplace(pr.first,CallbackList<>());
 	}
-}
 
-void Input::addGenericListener(const Callback<Key,bool>& listener){
-	generic_listeners.insert(listener);
-}
-
-void Input::removeGenericListener(const Callback<Key,bool>& listener){
-	generic_listeners.erase(listener);
-}
-
-void Input::addKeyListener(Key key,const Callback<bool>& listener){
-	key_listeners[key].insert(listener);
-}
-void Input::removeKeyListener(Key key,const Callback<bool>& listener){
-	key_listeners[key].erase(listener);
-}
-
-void Input::addKeypressListener(Key key,const Callback<>& listener){
-	keypress_listeners[key].insert(listener);
-}
-void Input::removeKeypressListener(Key key,const Callback<>& listener){
-	keypress_listeners[key].erase(listener);
+	glfwGetCursorPos(Window::glfw(),&mouse_pos.x,&mouse_pos.y);
 }

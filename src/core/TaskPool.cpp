@@ -8,8 +8,6 @@ void TaskPool::add_tasks(const std::list<Task>& ts){
 			tasks.push_back(tk);
 	}
 	task_count_sema.release(ts.size());
-	//close semaphore if it is open
-	empty_wait_sema.try_acquire();
 }
 
 void TaskPool::add_tasks(std::list<Task>&& ts){

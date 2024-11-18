@@ -5,7 +5,8 @@
 class Engine{
 	inline static std::atomic_bool is_quitting = false;
 public:
-	inline static double dT;
+
+	inline static bool print_fps = false;
 	inline static TaskCycle frame_cycle;
 
 	static void init();

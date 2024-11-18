@@ -63,7 +63,6 @@ void Engine::mainLoop(){
 
 	while(!is_quitting){
 		glfwPollEvents();
-		Input::update();
 		frame_cycle.flush();
 		frame_cycle.recycle();
 		Window::viewport().render();
@@ -73,8 +72,9 @@ void Engine::mainLoop(){
 
 		frame_counter++;
 		double now=Time::now();
-		Engine::dT = now-last_frame;
 		if(now-last_frame>1.0){
+			if(print_fps)
+				print(frame_counter);
 			last_frame=now;
 			frame_counter=0;
 		}

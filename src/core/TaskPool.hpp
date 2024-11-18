@@ -5,56 +5,7 @@
 #include <list>
 #include <condition_variable>
 #include <functional>
-
-enum CallbackResponse{
-  CALLBACK_DONE, CALLBACK_EXPIRED, CALLBACK_DEFER
-};
-
-template<typename...Args>
-class Callback{
-  std::weak_ptr<void> obj;
-  CallbackResponse (*fptr)(void*,Args...) = nullptr;
-public:
-  Callback()=default;
-  Callback(const Callback&)=default;
-  Callback(Callback&&)=default;
-  Callback& operator=(const Callback&)=default;
-  Callback& operator=(Callback&&)=default;
-  std::strong_ordering operator <=> (const Callback& c) const{
-		std::strong_ordering obj_o = std::strong_ordering::equal;
-		if(obj.owner_before(c.obj))
-			obj_o = std::strong_ordering::less;
-		else if(c.obj.owner_before(obj))
-			obj_o = std::strong_ordering::greater;
-		if(obj_o==0)
-			return ((size_t)fptr)<=>((size_t)c.fptr);
-		return obj_o;
-	};
-  bool operator==(const Callback&) const = default;
-  bool operator!=(const Callback&) const = default;
-  bool operator<(const Callback&) const = default;
-  bool operator>(const Callback&) const = default;
-  bool operator<=(const Callback&) const = default;
-  bool operator>=(const Callback&) const = default;
-  CallbackResponse operator()(Args...args){
-    std::shared_ptr<void> strong = obj.lock();
-    if(strong && fptr)
-      return fptr(strong.get(),std::forward<Args>(args)...);
-    return CALLBACK_EXPIRED;
-  }
-
-  template<typename Class, void(Class::*FPTR)(Args...)>
-  static Callback from(std::shared_ptr<Class> obj){
-    Callback ret;
-    ret.obj = obj;
-    static constexpr auto func = [](void* ptr, Args...args){
-      (static_cast<Class*>(ptr)->*FPTR)(std::forward(args)...);
-      return CALLBACK_DONE;
-    };
-    ret.fptr = func;
-    return ret;
-  }
-};
+#include <set>
 
 enum TaskStatus{
 	TASK_DONE, TASK_EXPIRED, TASK_DEFER
@@ -68,7 +19,6 @@ protected:
 	mutable std::mutex mtx;
 	std::list<Task> tasks;
 	std::counting_semaphore<> task_count_sema {0};
-	std::binary_semaphore empty_wait_sema {1};
 	std::condition_variable empty_notifier;
 	size_t in_progress = 0;
 
@@ -171,4 +121,112 @@ public:
 	MultiThreadCycle();
 	~MultiThreadCycle();
 	void flush() override;
+};
+
+
+enum CallbackResponse{
+	CALLBACK_DONE, CALLBACK_EXPIRED, CALLBACK_DEFER
+};
+
+template<typename...Args>
+class Callback{
+	std::weak_ptr<void> obj;
+	CallbackResponse (*fptr)(void*,Args...) = nullptr;
+public:
+	Callback()=default;
+	Callback(const Callback&)=default;
+	Callback(Callback&&)=default;
+	Callback& operator=(const Callback&)=default;
+	Callback& operator=(Callback&&)=default;
+	std::strong_ordering operator <=> (const Callback& c) const{
+		std::strong_ordering obj_o = std::strong_ordering::equal;
+		if(obj.owner_before(c.obj))
+			obj_o = std::strong_ordering::less;
+		else if(c.obj.owner_before(obj))
+			obj_o = std::strong_ordering::greater;
+		if(obj_o==0)
+			return ((size_t)fptr)<=>((size_t)c.fptr);
+		return obj_o;
+	};
+	bool operator==(const Callback&) const = default;
+	bool operator!=(const Callback&) const = default;
+	bool operator<(const Callback&) const = default;
+	bool operator>(const Callback&) const = default;
+	bool operator<=(const Callback&) const = default;
+	bool operator>=(const Callback&) const = default;
+	CallbackResponse operator()(Args...args) const{
+		std::shared_ptr<void> strong = obj.lock();
+		if(strong && fptr)
+			return fptr(strong.get(),std::forward<Args>(args)...);
+		return CALLBACK_EXPIRED;
+	}
+
+	template<typename Class, void(Class::*FPTR)(Args...)>
+	static Callback from(std::shared_ptr<Class> obj){
+		Callback ret;
+		ret.obj = obj;
+		static constexpr auto func = [](void* ptr, Args...args){
+			(static_cast<Class*>(ptr)->*FPTR)(std::forward(args)...);
+			return CALLBACK_DONE;
+		};
+		ret.fptr = func;
+		return ret;
+	}
+
+	template<typename Class, CallbackResponse(Class::*FPTR)(Args...)>
+	static Callback from(std::shared_ptr<Class> obj){
+		Callback ret;
+		ret.obj = obj;
+		static constexpr auto func = [](void* ptr, Args...args){
+			return (static_cast<Class*>(ptr)->*FPTR)(std::forward(args)...);
+		};
+		ret.fptr = func;
+		return ret;
+	}
+};
+
+template<typename...Args>
+class CallbackList{
+	mutable std::mutex mtx;
+	std::set<Callback<Args...>> list;
+public:
+
+	void add(const Callback<Args...>& cb){
+		std::scoped_lock lock(mtx);
+		list.insert(cb);
+	}
+
+	void remove(const Callback<Args...>& cb){
+		std::scoped_lock lock(mtx);
+		list.erase(cb);
+	}
+
+	Task makeTask(Callback<Args...> cb, const Args&...args){
+		return [this,cb,args...](){
+			CallbackResponse resp = cb(std::move(args)...);
+			if(resp==CALLBACK_EXPIRED){
+				this->remove(cb);
+				return TASK_EXPIRED;
+			}
+			if(resp==CALLBACK_DEFER){
+				return TASK_DEFER;
+			}
+			return TASK_DONE;
+		};
+	}
+
+	void dumpInto(TaskPool& pool,const Args&...args){
+		std::list<Task> tasks;
+		{
+			std::scoped_lock lock(mtx);
+			for(const Callback<Args...>& cb : list){
+				tasks.push_back(makeTask(cb,args...));
+			}
+		}
+		pool.add_tasks(std::move(tasks));
+	}
+
+	CallbackList()=default;
+	//CallbackList(const CallbackList& b):list(b.list){}
+	CallbackList(CallbackList&& b):list(std::move(b.list)){}
 };
