@@ -7,8 +7,8 @@ class OrbitCamera :public PerspectiveCamera, public Object{
 public:
 	double orbit_distance=5.0;
 	double speed=0.003;
-	void update() ;
-	fmat4 getView() const override;
-	void init();
+	void update(Viewport*) ;
+	dmat4 getView() const override;
 	OrbitCamera();
+	~OrbitCamera();
 };

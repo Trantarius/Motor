@@ -1,6 +1,7 @@
 #include "Input.hpp"
 #include "Window.hpp"
 #include "util/print.hpp"
+#include "Engine.hpp"
 
 std::string Input::keyName(Key key){
 	return keyNames.at(key);
@@ -12,7 +13,7 @@ bool Input::isKeyPressed(Key key){
 
 void Input::setCursorMode(int to){
 	cursor_mode=to;
-	glfwSetInputMode(Window::glfw(),GLFW_CURSOR,to);
+	glfwSetInputMode(Engine::main_window->glfw(),GLFW_CURSOR,to);
 }
 int Input::getCursorMode(){
 	return cursor_mode;
@@ -52,10 +53,10 @@ void Input::scrollCallback(GLFWwindow* window, double x, double y){
 }
 
 void Input::init(){
-	glfwSetKeyCallback(Window::glfw(),Input::keyCallback);
-	glfwSetCursorPosCallback(Window::glfw(),Input::cursorPosCallback);
-	glfwSetMouseButtonCallback(Window::glfw(),Input::mouseButtonCallback);
-	glfwSetScrollCallback(Window::glfw(),Input::scrollCallback);
+	glfwSetKeyCallback(Engine::main_window->glfw(),Input::keyCallback);
+	glfwSetCursorPosCallback(Engine::main_window->glfw(),Input::cursorPosCallback);
+	glfwSetMouseButtonCallback(Engine::main_window->glfw(),Input::mouseButtonCallback);
+	glfwSetScrollCallback(Engine::main_window->glfw(),Input::scrollCallback);
 
 	for(auto pr : keyNames){
 		keyStates.emplace(pr.first,false);
@@ -63,5 +64,5 @@ void Input::init(){
 		keypress_listeners.emplace(pr.first,CallbackList<>());
 	}
 
-	glfwGetCursorPos(Window::glfw(),&mouse_pos.x,&mouse_pos.y);
+	glfwGetCursorPos(Engine::main_window->glfw(),&mouse_pos.x,&mouse_pos.y);
 }

@@ -1,47 +1,53 @@
 #include "Mesh.hpp"
 #include "util/io.hpp"
 #include "defs/gl_defs.hpp"
-#include "Window.hpp"
 #include "Render.hpp"
 #include <map>
 
-MeshData::MeshData(Bloc<fvec3> verts):MeshData(_ref_count_init()){
+Mesh* Mesh::create(Bloc<fvec3> verts){
+	GLuint VAO,VBO;
+
 	assert(verts.size%3==0);
-	glGenVertexArrays(1,&data->VAO);
-	glGenBuffers(1,&data->VBO);
+	glGenVertexArrays(1,&VAO);
+	glGenBuffers(1,&VBO);
 
-	glBindVertexArray(data->VAO);
+	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, data->VBO);
-	glBufferData(GL_ARRAY_BUFFER,verts.size*sizeof(fvec3),verts,GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, verts.size*sizeof(fvec3),verts,GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),0);
 	glEnableVertexAttribArray(0);
 
 	glBindVertexArray(0);
-	data->elemcount=verts.size;
+	std::unique_ptr<Mesh> mesh{new Mesh(VAO,VBO, 0, verts.size)};
+	checkGLError();
+	return mesh.release();
 }
 
-MeshData::MeshData(Bloc<fvec3> verts,Bloc<ivec3> faces):MeshData(_ref_count_init()){
-	glGenVertexArrays(1,&data->VAO);
-	glGenBuffers(1,&data->VBO);
-	glGenBuffers(1,&data->EBO);
+Mesh* Mesh::create(Bloc<fvec3> verts,Bloc<ivec3> faces){
+	GLuint VAO,VBO,EBO;
+	glGenVertexArrays(1,&VAO);
+	glGenBuffers(1,&VBO);
+	glGenBuffers(1,&EBO);
 
-	glBindVertexArray(data->VAO);
+	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, data->VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER,verts.size*sizeof(fvec3),verts,GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.size*sizeof(ivec3),faces,GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),0);
 	glEnableVertexAttribArray(0);
 
 	glBindVertexArray(0);
-	data->elemcount=faces.size*3;
+	std::unique_ptr<Mesh> mesh{new Mesh(VAO,VBO,EBO,faces.size*3)};
+	checkGLError();
+	return mesh.release();
 }
-MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths):MeshData(_ref_count_init()){
+Mesh* Mesh::create(Bloc<float> vdata,Bloc<uint> attribute_widths){
 	int stride=0;
 	for(int n=0;n<attribute_widths.size;n++){
 		stride+=attribute_widths[n];
@@ -50,13 +56,14 @@ MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths):MeshData(_ref_
 	assert(vdata.size%stride==0);
 	int vertcount=vdata.size/stride;
 	assert(vertcount%3==0);
+	GLuint VAO,VBO;
 
-	glGenVertexArrays(1,&data->VAO);
-	glGenBuffers(1,&data->VBO);
+	glGenVertexArrays(1,&VAO);
+	glGenBuffers(1,&VBO);
 
-	glBindVertexArray(data->VAO);
+	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, data->VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER,vdata.size*sizeof(float),vdata,GL_STATIC_DRAW);
 
 	int off=0;
@@ -68,26 +75,30 @@ MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths):MeshData(_ref_
 	}
 
 	glBindVertexArray(0);
-	data->elemcount=vertcount;
+	std::unique_ptr<Mesh> mesh{new Mesh(VAO,VBO,0,vertcount)};
+	checkGLError();
+	return mesh.release();
 }
-MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths,Bloc<uint> elements):MeshData(_ref_count_init()){
+
+Mesh* Mesh::create(Bloc<float> vdata,Bloc<uint> attribute_widths,Bloc<uint> elements){
 
 	int stride=0;
 	for(int n=0;n<attribute_widths.size;n++){
 		stride+=attribute_widths[n];
 	}
 	assert(vdata.size%stride==0);
+	GLuint VAO,VBO,EBO;
 
-	glGenVertexArrays(1,&data->VAO);
-	glGenBuffers(1,&data->VBO);
-	glGenBuffers(1,&data->EBO);
+	glGenVertexArrays(1,&VAO);
+	glGenBuffers(1,&VBO);
+	glGenBuffers(1,&EBO);
 
-	glBindVertexArray(data->VAO);
+	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, data->VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER,vdata.size*sizeof(float),vdata,GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements.size*sizeof(uint),elements,GL_STATIC_DRAW);
 
 	int off=0;
@@ -99,40 +110,41 @@ MeshData::MeshData(Bloc<float> vdata,Bloc<uint> attribute_widths,Bloc<uint> elem
 	}
 
 	glBindVertexArray(0);
-	data->elemcount=elements.size;
+	std::unique_ptr<Mesh> mesh{new Mesh(VAO,VBO,EBO,elements.size)};
+	checkGLError();
+	return mesh.release();
 }
 
-
-void MeshData::onDestroy(){
-	glDeleteBuffers(1,&data->VBO);
-	glDeleteBuffers(1,&data->EBO);
-	glDeleteVertexArrays(1,&data->VAO);
+Mesh::~Mesh(){
+	if(VBO)
+		glDeleteBuffers(1,&VBO);
+	if(EBO)
+		glDeleteBuffers(1,&EBO);
+	if(VAO)
+		glDeleteVertexArrays(1,&VAO);
 }
 
-void MeshData::draw(uint mode) const {
-	assert(data!=nullptr);
-	glBindVertexArray(data->VAO);
-	if(data->EBO==0){
-		glDrawArrays(mode,0,data->elemcount);
+void Mesh::draw(GLenum mode) const {
+	glBindVertexArray(VAO);
+	if(EBO==0){
+		glDrawArrays(mode,0,elemcount);
 	}else{
-		glDrawElements(mode,data->elemcount,GL_UNSIGNED_INT,0);
+		glDrawElements(mode,elemcount,GL_UNSIGNED_INT,0);
 	}
 	glBindVertexArray(0);
 	checkGLError();
 }
 
-void Mesh::render() {
-	if(!shader.isNull() && !mesh_data.isNull()){
-		shader.use();
-		shader.setUniform("model"_id,(fmat4)transform.toMatrix());
-		shader.setUniform("view"_id,(fmat4)Window::viewport().view);
-		shader.setUniform("projection"_id,(fmat4)Window::viewport().projection);
-
-		if(shader.hasUniformBlock("LightBlock"_id)){
-			shader.setUniformBlock("LightBlock"_id,Window::viewport().light_buffer);
-		}
-
-		mesh_data.draw(GL_TRIANGLES);
+void MeshObject::render(const Viewport* vp) {
+	if(shader && mesh){
+		shader->use();
+		if(shader->hasUniform("model"))
+			shader->setUniform("model",(fmat4)transform.toMatrix());
+		if(shader->hasUniform("view"))
+			shader->setUniform("view",(fmat4)vp->view_matrix);
+		if(shader->hasUniform("projection"))
+			shader->setUniform("projection",(fmat4)vp->projection_matrix);
+		mesh->draw(GL_TRIANGLES);
 	}
 }
 
@@ -170,7 +182,7 @@ int countChar(string str,char c){
 	return count;
 }
 
-MeshData MeshData::readOBJ(string path){
+Mesh* Mesh::readOBJ(const std::string& path){
 	Bloc<char> filebloc = readfile(path);
 	string file(filebloc.ptr,filebloc.size);
 	filebloc.destroy();
@@ -357,6 +369,5 @@ MeshData MeshData::readOBJ(string path){
 	Bloc<float> vdata_bloc(vdata.data(),vdata.size());
 	Bloc<uint> attribute_widths_bloc(attribute_widths.data(),attribute_widths.size());
 	Bloc<uint> elements_bloc((uint*)elements.data(),elements.size()*3);
-
-	return MeshData(vdata_bloc,attribute_widths_bloc,elements_bloc);
+	return Mesh::create(vdata_bloc,attribute_widths_bloc,elements_bloc);
 }

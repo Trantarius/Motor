@@ -170,20 +170,22 @@ struct _mk_callback;
 template<typename Class, typename...Args, typename Ret, Ret(Class::*FPTR)(Args...)> requires std::derived_from<Class,Object>
 struct _mk_callback<Ret(Class::*)(Args...),FPTR>{
 	static Callback<Args...> make(const Object& obj){
-		Callback ret;
+		Callback<Args...> ret;
 		ret.obj = obj.self_ptr;
-		static constexpr auto ign_ret_func = [](Object* ptr, Args...args){
-			(dynamic_cast<Class*>(ptr)->*FPTR)(std::forward(args)...);
-			return CALLBACK_DONE;
-		};
-		static constexpr auto use_ret_func = [](Object* ptr, Args...args){
-			(dynamic_cast<Class*>(ptr)->*FPTR)(std::forward(args)...);
-			return CALLBACK_DONE;
-		};
-		if constexpr(std::same_as<Ret,CallbackResponse>)
+		if constexpr(std::same_as<Ret,CallbackResponse>){
+			static constexpr CallbackResponse (*use_ret_func)(Object*,Args...) = [](Object* ptr, Args...args){
+				(dynamic_cast<Class*>(ptr)->*FPTR)(std::forward<Args>(args)...);
+				return CALLBACK_DONE;
+			};
 			ret.fptr = use_ret_func;
-		else
+		}
+		else{
+			static constexpr CallbackResponse (*ign_ret_func)(Object*,Args...) = [](Object* ptr, Args...args){
+				(dynamic_cast<Class*>(ptr)->*FPTR)(std::forward<Args>(args)...);
+				return CALLBACK_DONE;
+			};
 			ret.fptr = ign_ret_func;
+		}
 		return ret;
 	}
 };

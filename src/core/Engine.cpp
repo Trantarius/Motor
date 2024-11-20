@@ -25,18 +25,12 @@ void Engine::init(){
 		throw std::runtime_error("glfwInit failed");
 	}
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+	main_window = std::make_unique<Window>();
 
-	GLFWwindow* win = glfwCreateWindow(1024,600,"Hello",NULL,NULL);
-	assert(win);
-
-	glfwMakeContextCurrent(win);
+	glfwMakeContextCurrent(main_window->glfw());
 	glfwSwapInterval(1);//enable Vsync
 	if(glfwRawMouseMotionSupported()){
-		glfwSetInputMode(win,GLFW_RAW_MOUSE_MOTION,GLFW_TRUE);
+		glfwSetInputMode(main_window->glfw(),GLFW_RAW_MOUSE_MOTION,GLFW_TRUE);
 	}
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -49,10 +43,10 @@ void Engine::init(){
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
+	main_window->viewport = std::make_unique<Viewport>();
+
 	Shader::loadAllShaderFiles("src/shaders");
 
-
-	Window::init(win);
 	Input::init();
 }
 
@@ -65,8 +59,8 @@ void Engine::mainLoop(){
 		glfwPollEvents();
 		frame_cycle.dumpInto(main_thread);
 		main_thread.flush();
-		Window::viewport().render();
-		if(glfwWindowShouldClose(Window::glfw())){
+		main_window->render();
+		if(glfwWindowShouldClose(main_window->glfw())){
 			quit();
 		}
 
@@ -79,10 +73,12 @@ void Engine::mainLoop(){
 			frame_counter=0;
 		}
 	}
+	is_quitting = false;
 }
 
 void Engine::terminate(){
 	main_thread.flush();
+	main_window.reset();
 	glfwTerminate();
 }
 

@@ -47,12 +47,12 @@ struct vec<T,2>{
 			return x<=>v.x;
 		return y<=>v.y;
 	};
-	constexpr bool operator==(const vec&) const = default;
-	constexpr bool operator!=(const vec&) const = default;
-	constexpr bool operator<(const vec&) const = default;
-	constexpr bool operator>(const vec&) const = default;
-	constexpr bool operator<=(const vec&) const = default;
-	constexpr bool operator>=(const vec&) const = default;
+	constexpr bool operator==(const vec& b) const {return *this<=>b==0;};
+	constexpr bool operator!=(const vec& b) const {return *this<=>b!=0;};
+	constexpr bool operator<(const vec& b) const {return *this<=>b<0;};
+	constexpr bool operator>(const vec& b) const {return *this<=>b>0;};
+	constexpr bool operator<=(const vec& b) const {return *this<=>b<=0;};
+	constexpr bool operator>=(const vec& b) const {return *this<=>b>=0;};
 
 #define AOP(OP) \
 	template<typename B> \
@@ -161,12 +161,12 @@ struct vec<T,3>{
 			return y<=>v.y;
 		return z<=>v.z;
 	};
-	constexpr bool operator==(const vec&) const = default;
-	constexpr bool operator!=(const vec&) const = default;
-	constexpr bool operator<(const vec&) const = default;
-	constexpr bool operator>(const vec&) const = default;
-	constexpr bool operator<=(const vec&) const = default;
-	constexpr bool operator>=(const vec&) const = default;
+	constexpr bool operator==(const vec& b) const {return *this<=>b==0;};
+	constexpr bool operator!=(const vec& b) const {return *this<=>b!=0;};
+	constexpr bool operator<(const vec& b) const {return *this<=>b<0;};
+	constexpr bool operator>(const vec& b) const {return *this<=>b>0;};
+	constexpr bool operator<=(const vec& b) const {return *this<=>b<=0;};
+	constexpr bool operator>=(const vec& b) const {return *this<=>b>=0;};
 
 #define AOP(OP) \
 	template<typename B> \
@@ -279,12 +279,12 @@ struct vec<T,4>{
 			return z<=>v.z;
 		return w<=>v.w;
 	};
-	constexpr bool operator==(const vec&) const = default;
-	constexpr bool operator!=(const vec&) const = default;
-	constexpr bool operator<(const vec&) const = default;
-	constexpr bool operator>(const vec&) const = default;
-	constexpr bool operator<=(const vec&) const = default;
-	constexpr bool operator>=(const vec&) const = default;
+	constexpr bool operator==(const vec& b) const {return *this<=>b==0;};
+	constexpr bool operator!=(const vec& b) const {return *this<=>b!=0;};
+	constexpr bool operator<(const vec& b) const {return *this<=>b<0;};
+	constexpr bool operator>(const vec& b) const {return *this<=>b>0;};
+	constexpr bool operator<=(const vec& b) const {return *this<=>b<=0;};
+	constexpr bool operator>=(const vec& b) const {return *this<=>b>=0;};
 
 #define AOP(OP) \
 	template<typename B> \

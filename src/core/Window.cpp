@@ -1,17 +1,10 @@
 #include "Window.hpp"
 #include "Render.hpp"
 #include "defs/gl_defs.hpp"
+#include "Engine.hpp"
 
-struct WindowRender : public Viewport{
-	void preRender() override;
-	void postRender() override;
-	void setSize(ivec2 to) override;
-	ivec2 getSize() const override;
-};
 
-WindowRender* window_viewport = nullptr;
-
-ivec2 Window::getSize(){
+ivec2 Window::getSize() const{
 	int x,y;
 	glfwGetWindowSize(window,&x,&y);
 	return ivec2(x,y);
@@ -21,35 +14,49 @@ void Window::setSize(ivec2 to){
 	glfwSetWindowSize(window,to.x,to.y);
 }
 
-void framebufferResizeCallback(GLFWwindow* window, int width, int height){
+std::string Window::getTitle() const{
+	return glfwGetWindowTitle(window);
+}
+
+void Window::setTitle(const std::string& title){
+	glfwSetWindowTitle(window,title.c_str());
+}
+
+void Window::framebufferResizeCallback(GLFWwindow* window, int width, int height){
+	assert(window_obj_from_glfw.contains(window));
+	Window* winobj = window_obj_from_glfw[window];
+	winobj->framebuffer_size=ivec2{width,height};
+}
+
+Window::Window(){
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+
+	if(Engine::main_window)
+		window = glfwCreateWindow(1024,600,"Hello",NULL,Engine::main_window->glfw());
+	else
+		window = glfwCreateWindow(1024,600,"Hello",NULL,NULL);
+	assert(window);
+	glfwSetFramebufferSizeCallback(window,Window::framebufferResizeCallback);
+}
+
+Window::~Window(){
+	glfwDestroyWindow(window);
+}
+
+void Window::render(){
+	assert(viewport);
 	glfwMakeContextCurrent(window);
-	glViewport(0,0,width,height);
-}
-
-void Window::init(GLFWwindow* win){
-
-	window=win;
-	glfwSetFramebufferSizeCallback(win,framebufferResizeCallback);
-
-	window_viewport = new WindowRender();
-}
-
-void WindowRender::preRender(){
-	glfwMakeContextCurrent(Window::glfw());
-	glBindFramebuffer(GL_FRAMEBUFFER,0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-void WindowRender::postRender(){
-	glfwSwapBuffers(Window::glfw());
-}
-
-void WindowRender::setSize(ivec2 to){
-	Window::setSize(to);
-}
-ivec2 WindowRender::getSize() const {
-	return Window::getSize();
-}
-
-Viewport& Window::viewport(){
-	return *window_viewport;
+	viewport->setSize(framebuffer_size);
+	viewport->render();
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, viewport->getOutputFramebuffer());
+	ivec2 src_size = viewport->getSize();
+	ivec2 dst_size = framebuffer_size;
+	glBlitFramebuffer(0, 0, src_size.x, src_size.y, 0, 0, dst_size.x, dst_size.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glfwSwapBuffers(window);
 }

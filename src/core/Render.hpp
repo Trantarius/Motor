@@ -1,67 +1,61 @@
 #pragma once
 #include "util/mat.hpp"
 #include "Spatial.hpp"
-#include "Light.hpp"
 #include "Shader.hpp"
 #include <memory>
-#include <list>
+#include "Texture.hpp"
 #include <numbers>
 #include "TaskPool.hpp"
 
 struct Camera : public Spatial{
-	virtual fmat4 getProjection(ivec2 vp_size) const=0;
-	virtual fmat4 getView() const;
+	virtual dmat4 getProjection(ivec2 vp_size) const=0;
+	virtual dmat4 getView() const;
 };
 
 struct PerspectiveCamera : public Camera{
-	float fov=std::numbers::pi/4;
-	float near=0.01;
-	float far=1000.0;
-	fmat4 getProjection(ivec2 vp_size) const override;
+	double fov=std::numbers::pi/4;
+	double near=0.01;
+	double far=1000.0;
+	dmat4 getProjection(ivec2 vp_size) const override;
 };
 
 struct OrthographicCamera : public Camera{
-	float size=10.0;
-	float near=0.01;
-	float far=1000.0;
-	fmat4 getProjection(ivec2 vp_size) const override;
+	double size=10.0;
+	double near=0.01;
+	double far=1000.0;
+	dmat4 getProjection(ivec2 vp_size) const override;
 };
 
 
 
 class Viewport{
+	ivec2 size{0,0};
+	//textures for material_framebuffer, rds is rougness, diffuse, and specular
+	enum{ALBEDO_TEX, NORMAL_TEX, VERTEX_TEX, RDS_TEX};
+	gl::Framebuffer material_framebuffer;
+	gl::Texture material_tex_arr;
+	gl::Renderbuffer material_depth_renderbuffer;
+	gl::Framebuffer framebuffer;
+	gl::Renderbuffer depth_renderbuffer;
+	gl::Texture output_texture;
 
-	fmat4 current_projection;
-	fmat4 current_view;
-	ivec2 size=ivec2(1024,576);
-
-	std::list<std::shared_ptr<Light>> lights;
-	UniformBuffer _light_buffer;
-
-protected:
-
-	virtual void preRender(){};
-	virtual void postRender(){};
-
+	//std::list<std::shared_ptr<Light>> lights;
+	//UniformBuffer _light_buffer;
+	static void update_material_buffer_size();
+	friend class Shader;
 public:
-	int mode = 0;
+	enum RenderStage{
+		NORMAL, LIGHT, UNLIT, UI
+	};
 
-	CallbackList<> pre_render_cycle;
-	CallbackList<> render_cycle;
-
-	const fmat4& projection=current_projection;
-	const fmat4& view=current_view;
-	const UniformBuffer& light_buffer=_light_buffer;
-
-	std::shared_ptr<Camera> camera;
+	CallbackList<Viewport*> pre_render_cycle;
+	CallbackList<const Viewport*> render_cycle[4];
+	dmat4 projection_matrix;
+	dmat4 view_matrix;
 
 	void render();
-
-	virtual void setSize(ivec2 to){size=to;}
-	virtual ivec2 getSize() const {return size;}
-
-	void addLight(std::shared_ptr<Light> light);
-	void removeLight(std::shared_ptr<Light> light);
-
-	Viewport();
+	ivec2 getSize() const;
+	void setSize(ivec2);
+	GLuint getOutputTexture();
+	GLuint getOutputFramebuffer();
 };

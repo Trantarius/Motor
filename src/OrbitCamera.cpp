@@ -4,7 +4,7 @@
 #include "core/Window.hpp"
 
 
-void OrbitCamera::update(){
+void OrbitCamera::update(Viewport* vp){
 
 	dvec2 theta=Input::getMousePos()*speed;
 
@@ -14,9 +14,12 @@ void OrbitCamera::update(){
 
 	dquat xrot=quat(quatRot(rotation,dvec3(1,0,0)),-theta.y);
 	rotation=quatMul(xrot,rotation);
+
+	vp->projection_matrix = getProjection(vp->getSize());
+	vp->view_matrix = getView();
 }
 
-fmat4 OrbitCamera::getView() const {
+dmat4 OrbitCamera::getView() const {
 	fvec3 offset=quatRot(rotation,fvec3(0,0,orbit_distance));
 	Transform tform=transform;
 	tform.translate(offset);
@@ -28,6 +31,11 @@ void OrbitCamera::onEscapePress(){
 }
 
 OrbitCamera::OrbitCamera(){
-	Window::viewport().pre_render_cycle.add(CALLBACK(*this,OrbitCamera::update));
+	Engine::main_window->viewport->pre_render_cycle.add(CALLBACK(*this,OrbitCamera::update));
 	Input::keypress_listeners[Key::ESCAPE].add(CALLBACK(*this,OrbitCamera::onEscapePress));
+}
+
+OrbitCamera::~OrbitCamera(){
+	Engine::main_window->viewport->pre_render_cycle.remove(CALLBACK(*this,OrbitCamera::update));
+	Input::keypress_listeners[Key::ESCAPE].remove(CALLBACK(*this,OrbitCamera::onEscapePress));
 }

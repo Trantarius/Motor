@@ -1,62 +1,41 @@
 #pragma once
 #include <stdexcept>
 #include "util/mat.hpp"
-#include "util/id.hpp"
 #include "defs/gl_defs.hpp"
-#include "util/strings.hpp"
-#include "util/refcount.hpp"
 #include "util/Bloc.hpp"
 #include <map>
-#include <vector>
+#include <list>
 
-class Texture;
-
-struct UniformBlockMember{
-	ID id;
-	std::string name;
-	int index;
-	int size;//for arrays
-	glEnum type;
-
-	int offset;
-	int array_stride;
-	int matrix_stride;
-};
-
-struct UniformBlock{
-	ID id;
-	std::string name;
-	int index;
-	int data_size;
-
-	std::map<ID,UniformBlockMember> members;
-};
-
-struct UniformInfo{
-	ID id;
-	std::string name;
-	int index;
-	int location;
-	int size;//for arrays
-	glEnum type;
-};
-
-STRUCT_TO_STRING(UniformInfo,id,name,index,location,size,type)
-STRUCT_TO_STRING(UniformBlock,id,name,index,data_size)
-STRUCT_TO_STRING(UniformBlockMember,id,name,index,size,type,offset,array_stride,matrix_stride);
-
-class UniformBuffer;
-
-class Shader{
-
-	struct _Data{
-		uint refcount=0;
-		uint gl_program=0;
-		std::map<ID,UniformInfo> uniforms;
-		std::map<ID,UniformBlock> uniform_blocks;
+struct SubShader{
+	GLuint id{0};
+	SubShader(GLenum type, const std::string& path);
+	~SubShader();
+	struct CompileError : public std::runtime_error{
+		CompileError(std::string what):std::runtime_error(what){}
 	};
 
-	REF_COUNTER(Shader,_Data)
+	operator bool() const;
+
+	SubShader()=delete;
+	SubShader(const SubShader&)=delete;
+	SubShader(SubShader&&)=delete;
+	SubShader& operator=(const SubShader&)=delete;
+	SubShader& operator=(SubShader&&)=delete;
+};
+
+class Shader{
+public:
+	struct Uniform{
+		std::string name;
+		int index;
+		int location;
+		int size;//for arrays, 1 if non-array
+		int unit{-1};//for textures only
+		GLenum type;
+	};
+private:
+	GLuint id=0;
+	std::map<std::string,Uniform> uniforms;
 
 public:
 
@@ -65,144 +44,66 @@ public:
 	};
 
 	Shader(std::string vertex_shader,std::string fragment_shader);
+	~Shader();
+
+	operator bool() const;
+
+	Shader()=delete;
+	Shader(const Shader&)=delete;
+	Shader(Shader&&)=delete;
+	Shader& operator=(const Shader&)=delete;
+	Shader& operator=(Shader&&)=delete;
 
 	void use() const;
 
-	template<typename T>
-	void setUniform(ID name,T val);
-
-	template<typename T>
-	void setUniformArray(ID name,const Bloc<T> vals);
-
-	void setUniformBlock(ID name,UniformBuffer buffer);
-
-	std::vector<UniformInfo> getUniforms() const;
-	UniformInfo getUniform(ID id) const;
-	bool hasUniform(ID id) const;
-	std::vector<UniformBlock> getUniformBlocks() const;
-	UniformBlock getUniformBlock(ID id) const;
-	bool hasUniformBlock(ID id) const;
+	std::list<Uniform> getUniformList() const;
+	Uniform getUniform(const std::string& name) const;
+	bool hasUniform(const std::string& name) const;
 
 	// recursively load all shader files (*.glsl) found at path into named strings for #include directives
 	// names will be relative to path
 	static void loadAllShaderFiles(std::string path);
+
+	void setUniform(const std::string& name,float val);
+	void setUniformArray(const std::string& name, Bloc<float> val);
+	void setUniform(const std::string& name,fvec2 val);
+	void setUniformArray(const std::string& name, Bloc<fvec2> val);
+	void setUniform(const std::string& name,fvec3 val);
+	void setUniformArray(const std::string& name, Bloc<fvec3> val);
+	void setUniform(const std::string& name,fvec4 val);
+	void setUniformArray(const std::string& name, Bloc<fvec4> val);
+
+	void setUniform(const std::string& name,double val);
+	void setUniformArray(const std::string& name, Bloc<double> val);
+	void setUniform(const std::string& name,dvec2 val);
+	void setUniformArray(const std::string& name, Bloc<dvec2> val);
+	void setUniform(const std::string& name,dvec3 val);
+	void setUniformArray(const std::string& name, Bloc<dvec3> val);
+	void setUniform(const std::string& name,dvec4 val);
+	void setUniformArray(const std::string& name, Bloc<dvec4> val);
+
+	void setUniform(const std::string& name,int val);
+	void setUniformArray(const std::string& name, Bloc<int> val);
+	void setUniform(const std::string& name,ivec2 val);
+	void setUniformArray(const std::string& name, Bloc<ivec2> val);
+	void setUniform(const std::string& name,ivec3 val);
+	void setUniformArray(const std::string& name, Bloc<ivec3> val);
+	void setUniform(const std::string& name,ivec4 val);
+	void setUniformArray(const std::string& name, Bloc<ivec4> val);
+
+	void setUniform(const std::string& name,fmat2 val);
+	void setUniformArray(const std::string& name, Bloc<fmat2> val);
+	void setUniform(const std::string& name,fmat3 val);
+	void setUniformArray(const std::string& name, Bloc<fmat3> val);
+	void setUniform(const std::string& name,fmat4 val);
+	void setUniformArray(const std::string& name, Bloc<fmat4> val);
+
+	void setUniform(const std::string& name,dmat2 val);
+	void setUniformArray(const std::string& name, Bloc<dmat2> val);
+	void setUniform(const std::string& name,dmat3 val);
+	void setUniformArray(const std::string& name, Bloc<dmat3> val);
+	void setUniform(const std::string& name,dmat4 val);
+	void setUniformArray(const std::string& name, Bloc<dmat4> val);
+
+	void setUniformTexture(const std::string& name,GLuint val);
 };
-
-template <> void Shader::setUniform(ID name,float val);
-template <> void Shader::setUniformArray(ID name,const Bloc<float> val);
-template <> void Shader::setUniform(ID name,fvec2 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<fvec2> val);
-template <> void Shader::setUniform(ID name,fvec3 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<fvec3> val);
-template <> void Shader::setUniform(ID name,fvec4 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<fvec4> val);
-
-template <> void Shader::setUniform(ID name,double val);
-template <> void Shader::setUniformArray(ID name,const Bloc<double> val);
-template <> void Shader::setUniform(ID name,dvec2 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<dvec2> val);
-template <> void Shader::setUniform(ID name,dvec3 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<dvec3> val);
-template <> void Shader::setUniform(ID name,dvec4 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<dvec4> val);
-
-template <> void Shader::setUniform(ID name,int val);
-template <> void Shader::setUniformArray(ID name,const Bloc<int> val);
-template <> void Shader::setUniform(ID name,ivec2 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<ivec2> val);
-template <> void Shader::setUniform(ID name,ivec3 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<ivec3> val);
-template <> void Shader::setUniform(ID name,ivec4 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<ivec4> val);
-
-template <> void Shader::setUniform(ID name,fmat2 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<fmat2> val);
-template <> void Shader::setUniform(ID name,fmat3 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<fmat3> val);
-template <> void Shader::setUniform(ID name,fmat4 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<fmat4> val);
-
-template <> void Shader::setUniform(ID name,dmat2 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<dmat2> val);
-template <> void Shader::setUniform(ID name,dmat3 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<dmat3> val);
-template <> void Shader::setUniform(ID name,dmat4 val);
-template <> void Shader::setUniformArray(ID name,const Bloc<dmat4> val);
-
-template <> void Shader::setUniform(ID name,Texture val);
-template <> void Shader::setUniformArray(ID name,const Bloc<Texture> val);
-
-
-
-class UniformBuffer{
-
-	static IndexDistributor binding_distributor;
-
-	struct _Data{
-		uint refcount=0;
-		uint buffer;
-		int binding=-1;
-		UniformBlock block;
-		Bloc<void> update_data;
-	};
-
-	REF_COUNTER(UniformBuffer,_Data)
-
-public:
-
-	UniformBuffer(const UniformBlock& block);
-
-	void beginUpdate();
-	void endUpdate();
-
-	UniformBlock getUniformBlock() const;
-
-	template<typename T>
-	void setUniform(ID name,T val);
-
-	template<typename T>
-	void setUniformArray(ID name,const Bloc<T> vals);
-
-	friend void Shader::setUniformBlock(ID id,UniformBuffer buffer);
-};
-
-template <> void UniformBuffer::setUniform(ID name,float val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<float> val);
-template <> void UniformBuffer::setUniform(ID name,fvec2 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<fvec2> val);
-template <> void UniformBuffer::setUniform(ID name,fvec3 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<fvec3> val);
-template <> void UniformBuffer::setUniform(ID name,fvec4 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<fvec4> val);
-
-template <> void UniformBuffer::setUniform(ID name,double val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<double> val);
-template <> void UniformBuffer::setUniform(ID name,dvec2 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<dvec2> val);
-template <> void UniformBuffer::setUniform(ID name,dvec3 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<dvec3> val);
-template <> void UniformBuffer::setUniform(ID name,dvec4 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<dvec4> val);
-
-template <> void UniformBuffer::setUniform(ID name,int val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<int> val);
-template <> void UniformBuffer::setUniform(ID name,ivec2 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<ivec2> val);
-template <> void UniformBuffer::setUniform(ID name,ivec3 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<ivec3> val);
-template <> void UniformBuffer::setUniform(ID name,ivec4 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<ivec4> val);
-
-template <> void UniformBuffer::setUniform(ID name,fmat2 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<fmat2> val);
-template <> void UniformBuffer::setUniform(ID name,fmat3 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<fmat3> val);
-template <> void UniformBuffer::setUniform(ID name,fmat4 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<fmat4> val);
-
-template <> void UniformBuffer::setUniform(ID name,dmat2 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<dmat2> val);
-template <> void UniformBuffer::setUniform(ID name,dmat3 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<dmat3> val);
-template <> void UniformBuffer::setUniform(ID name,dmat4 val);
-template <> void UniformBuffer::setUniformArray(ID name,const Bloc<dmat4> val);

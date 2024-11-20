@@ -2,6 +2,8 @@
 #include <atomic>
 #include "TaskPool.hpp"
 
+struct Window;
+
 class Engine{
 	inline static std::atomic_bool is_quitting = false;
 public:
@@ -10,6 +12,7 @@ public:
 
 	inline static TaskPool main_thread;
 	inline static CallbackList<> frame_cycle;
+	inline static std::unique_ptr<Window> main_window;
 
 	static void init();
 	static void mainLoop();
