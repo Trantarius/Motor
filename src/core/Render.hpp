@@ -29,9 +29,12 @@ struct OrthographicCamera : public Camera{
 
 
 class Viewport{
+public:
+	inline static constexpr int MATERIAL_COMPONENT_TEXTURE_COUNT = 4;
+	enum MaterialComponent{ALBEDO_TEX, NORMAL_TEX, VERTEX_TEX, RDS_TEX};
+private:
 	ivec2 size{0,0};
 	//textures for material_framebuffer, rds is rougness, diffuse, and specular
-	enum{ALBEDO_TEX, NORMAL_TEX, VERTEX_TEX, RDS_TEX};
 	gl::Framebuffer material_framebuffer;
 	gl::Texture material_tex_arr;
 	gl::Renderbuffer material_depth_renderbuffer;
@@ -44,18 +47,22 @@ class Viewport{
 	static void update_material_buffer_size();
 	friend class Shader;
 public:
+	inline static constexpr int RENDER_STAGE_COUNT = 4;
 	enum RenderStage{
 		NORMAL, LIGHT, UNLIT, UI
 	};
 
 	CallbackList<Viewport*> pre_render_cycle;
-	CallbackList<const Viewport*> render_cycle[4];
+	CallbackList<const Viewport*> render_cycle[RENDER_STAGE_COUNT];
 	dmat4 projection_matrix;
 	dmat4 view_matrix;
+
+	Viewport();
 
 	void render();
 	ivec2 getSize() const;
 	void setSize(ivec2);
-	GLuint getOutputTexture();
-	GLuint getOutputFramebuffer();
+	GLuint getMaterialBuffer() const;
+	GLuint getOutputTexture() const;
+	GLuint getOutputFramebuffer() const;
 };

@@ -1,6 +1,8 @@
 #include "Texture.hpp"
 #include <cassert>
+#include "defs/gl_defs.hpp"
 #include "util/stb_image.h"
+#include "util/print.hpp"
 
 GLenum format_from_internal_format(GLenum internal_format){
 	switch(internal_format){
@@ -97,7 +99,14 @@ Texture::Texture(GLenum shape, ivec3 size, int layers, int samples, GLenum forma
 	this->samples = samples;
 	this->shape = shape;
 	GLenum base_format=format_from_internal_format(format);
+
 	glBindTexture(shape, id);
+	glTexParameteri(shape, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(shape, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(shape, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(shape, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(shape, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 	switch(shape){
 		case GL_TEXTURE_1D:
 			glTexImage1D(GL_TEXTURE_1D, 0, format, size.x, 0, base_format, type, data);
@@ -255,12 +264,29 @@ int Texture::getMaxTextureUnits(){
 	return i;
 }
 
-Texture* Texture::readPNG(const std::string& path){
+GLuint Texture::readPNG(const std::string& path){
 
 	int width=0,height=0,components=0;
-	uint16_t* data=stbi_load_16(path.c_str(),&width,&height,&components,3);
+	uint16_t* data=stbi_load_16(path.c_str(),&width,&height,&components,0);
+	long sum=0;
+	for(int n=0;n<width*height*components;n++){
+		sum+=data[n];
+	}
+	print(width, " ", height, " ", components);
+	print("sum of PNG image is ",sum);
+	print("midpoint of PNG is ",data[(256*512+256)*4],", ",data[(256*512+256)*4+1],", ",data[(256*512+256)*4+2],", ",data[(256*512+256)*4+3]);
 	assert(data!=nullptr);
-	Texture* ret = new Texture(GL_TEXTURE_2D, {width,height,0}, 0, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
+	//Texture* ret = new Texture(GL_TEXTURE_2D, {width,height,0}, 0, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
+	GLuint ret;
+	glCreateTextures(GL_TEXTURE_2D, 1, &ret);
+	//glTextureStorage2D(ret, 1, GL_RGBA8, width, height);
+	glBindTexture(GL_TEXTURE_2D,ret);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
+	checkGLError();
 	stbi_image_free(data);
 	return ret;
 }

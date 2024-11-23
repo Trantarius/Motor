@@ -73,7 +73,7 @@ public:
 	void bindUnit(int) const;
 	void generateMipmaps();
 
-	static Texture* readPNG(const std::string& path);
+	static GLuint readPNG(const std::string& path);
 	static int getMaxCombinedTextureUnits();
 	static int getMaxTextureUnits();
 };

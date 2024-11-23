@@ -1,8 +1,11 @@
 #include "Mesh.hpp"
+#include "core/Shader.hpp"
 #include "util/io.hpp"
 #include "defs/gl_defs.hpp"
 #include "Render.hpp"
 #include <map>
+#include "Material.hpp"
+#include "util/print.hpp"
 
 Mesh* Mesh::create(Bloc<fvec3> verts){
 	GLuint VAO,VBO;
@@ -138,17 +141,145 @@ void Mesh::draw(GLenum mode) const {
 void MeshObject::render(const Viewport* vp) {
 	if(shader && mesh){
 		shader->use();
-		if(shader->hasUniform("model"))
-			shader->setUniform("model",(fmat4)transform.toMatrix());
-		if(shader->hasUniform("view"))
-			shader->setUniform("view",(fmat4)vp->view_matrix);
-		if(shader->hasUniform("projection"))
-			shader->setUniform("projection",(fmat4)vp->projection_matrix);
+		if(shader->hasUniform("model_matrix"))
+			shader->setUniform("model_matrix",(fmat4)transform.toMatrix());
+		if(shader->hasUniform("view_matrix"))
+			shader->setUniform("view_matrix",(fmat4)vp->view_matrix);
+		if(shader->hasUniform("projection_matrix"))
+			shader->setUniform("projection_matrix",(fmat4)vp->projection_matrix);
+
+		if(material){
+			if(shader->hasUniform("enable_albedo_texture"))
+				shader->setUniform("enable_albedo_texture", (bool)(material->albedo_texture));
+			if(shader->hasUniform("albedo_texture") && material->albedo_texture)
+				shader->setUniformTexture("albedo_texture", material->albedo_texture->getID());
+			if(shader->hasUniform("albedo"))
+				shader->setUniform("albedo",material->albedo);
+			if(shader->hasUniform("enable_normal_texture"))
+				shader->setUniform("enable_normal_texture", (bool)(material->normal_texture));
+			if(shader->hasUniform("normal_texture") && material->normal_texture)
+				shader->setUniformTexture("normal_texture",material->normal_texture->getID());
+			if(shader->hasUniform("enable_roughness_texture"))
+				shader->setUniform("enable_roughness_texture", (bool)(material->rds_texture && material->roughness_use_texture));
+			if(shader->hasUniform("enable_diffuse_texture"))
+				shader->setUniform("enable_diffuse_texture", (bool)(material->rds_texture && material->diffuse_use_texture));
+			if(shader->hasUniform("enable_specular_texture"))
+				shader->setUniform("enable_specular_texture", (bool)(material->rds_texture && material->specular_use_texture));
+			if(shader->hasUniform("rds_texture") && material->rds_texture)
+				shader->setUniformTexture("rds_texture", material->rds_texture->getID());
+			if(shader->hasUniform("roughness"))
+				shader->setUniform("roughness", material->roughness);
+			if(shader->hasUniform("diffuse"))
+				shader->setUniform("diffuse", material->diffuse);
+			if(shader->hasUniform("specular"))
+				shader->setUniform("specular", material->specular);
+		}else{
+			if(shader->hasUniform("enable_albedo_texture"))
+				shader->setUniform("enable_albedo_texture", false);
+			if(shader->hasUniform("albedo"))
+				shader->setUniform("albedo",fvec3(0.5,0.5,0.5));
+			if(shader->hasUniform("enable_normal_texture"))
+				shader->setUniform("enable_normal_texture", false);
+			if(shader->hasUniform("enable_roughness_texture"))
+				shader->setUniform("enable_roughness_texture", false);
+			if(shader->hasUniform("enable_diffuse_texture"))
+				shader->setUniform("enable_diffuse_texture", false);
+			if(shader->hasUniform("enable_specular_texture"))
+				shader->setUniform("enable_specular_texture", false);
+			if(shader->hasUniform("roughness"))
+				shader->setUniform("roughness", (float)(1.0));
+			if(shader->hasUniform("diffuse"))
+				shader->setUniform("diffuse", (float)(0.5));
+			if(shader->hasUniform("specular"))
+				shader->setUniform("specular", (float)(0.5));
+		}
+
+		if(shader->hasUniform("material_buffer"))
+			shader->setUniformTexture("material_buffer", vp->getMaterialBuffer());
+
+		for(const std::pair<std::string,UniformValue>& pr : bound_uniforms){
+			if(shader->hasUniform(pr.first))
+				shader->setUniformValue(pr.first, pr.second);
+		}
+
 		mesh->draw(GL_TRIANGLES);
 	}
 }
 
+Mesh* Mesh::makePlane(fvec3 size){
+	std::vector<float> verts;
+	if(size.x==0){
+		//CCW order puts front face facing +x
+		verts.insert(verts.end(),{0,-size.y/2,-size.z/2});
+		verts.insert(verts.end(),{0,0});
+		verts.insert(verts.end(),{((size.y<0)!=(size.z<0)?-1.0f:1.0f),0,0});
+		verts.insert(verts.end(),{0, size.y/2,-size.z/2});
+		verts.insert(verts.end(),{1,0});
+		verts.insert(verts.end(),{((size.y<0)!=(size.z<0)?-1.0f:1.0f),0,0});
+		verts.insert(verts.end(),{0,-size.y/2, size.z/2});
+		verts.insert(verts.end(),{0,1});
+		verts.insert(verts.end(),{((size.y<0)!=(size.z<0)?-1.0f:1.0f),0,0});
 
+		verts.insert(verts.end(),{0, size.y/2, size.z/2});
+		verts.insert(verts.end(),{1,1});
+		verts.insert(verts.end(),{((size.y<0)!=(size.z<0)?-1.0f:1.0f),0,0});
+		verts.insert(verts.end(),{0,-size.y/2, size.z/2});
+		verts.insert(verts.end(),{0,1});
+		verts.insert(verts.end(),{((size.y<0)!=(size.z<0)?-1.0f:1.0f),0,0});
+		verts.insert(verts.end(),{0, size.y/2,-size.z/2});
+		verts.insert(verts.end(),{1,0});
+		verts.insert(verts.end(),{((size.y<0)!=(size.z<0)?-1.0f:1.0f),0,0});
+	}
+	else if(size.y==0){
+		//CCW order puts front face facing +y
+		// this looks a little different because we have to pretend z is before x
+		verts.insert(verts.end(),{-size.x/2, 0,-size.z/2});
+		verts.insert(verts.end(),{0,0});
+		verts.insert(verts.end(),{0,((size.x<0)!=(size.z<0)?-1.0f:1.0f),0});
+		verts.insert(verts.end(),{-size.x/2, 0, size.z/2});
+		verts.insert(verts.end(),{1,0});
+		verts.insert(verts.end(),{0,((size.x<0)!=(size.z<0)?-1.0f:1.0f),0});
+		verts.insert(verts.end(),{ size.x/2, 0,-size.z/2});
+		verts.insert(verts.end(),{0,1});
+		verts.insert(verts.end(),{0,((size.x<0)!=(size.z<0)?-1.0f:1.0f),0});
+
+		verts.insert(verts.end(),{ size.x/2, 0, size.z/2});
+		verts.insert(verts.end(),{1,1});
+		verts.insert(verts.end(),{0,((size.x<0)!=(size.z<0)?-1.0f:1.0f),0});
+		verts.insert(verts.end(),{ size.x/2, 0,-size.z/2});
+		verts.insert(verts.end(),{0,1});
+		verts.insert(verts.end(),{0,((size.x<0)!=(size.z<0)?-1.0f:1.0f),0});
+		verts.insert(verts.end(),{-size.x/2, 0, size.z/2});
+		verts.insert(verts.end(),{1,0});
+		verts.insert(verts.end(),{0,((size.x<0)!=(size.z<0)?-1.0f:1.0f),0});
+	}
+	else if(size.z==0){
+		//CCW order puts front face facing +z
+		verts.insert(verts.end(),{-size.x/2,-size.y/2, 0});
+		verts.insert(verts.end(),{0,0});
+		verts.insert(verts.end(),{0,0,((size.x<0)!=(size.y<0)?-1.0f:1.0f)});
+		verts.insert(verts.end(),{ size.x/2,-size.y/2, 0});
+		verts.insert(verts.end(),{1,0});
+		verts.insert(verts.end(),{0,0,((size.x<0)!=(size.y<0)?-1.0f:1.0f)});
+		verts.insert(verts.end(),{-size.x/2, size.y/2, 0});
+		verts.insert(verts.end(),{0,1});
+		verts.insert(verts.end(),{0,0,((size.x<0)!=(size.y<0)?-1.0f:1.0f)});
+
+		verts.insert(verts.end(),{ size.x/2, size.y/2, 0});
+		verts.insert(verts.end(),{1,1});
+		verts.insert(verts.end(),{0,0,((size.x<0)!=(size.y<0)?-1.0f:1.0f)});
+		verts.insert(verts.end(),{-size.x/2, size.y/2, 0});
+		verts.insert(verts.end(),{0,1});
+		verts.insert(verts.end(),{0,0,((size.x<0)!=(size.y<0)?-1.0f:1.0f)});
+		verts.insert(verts.end(),{ size.x/2,-size.y/2, 0});
+		verts.insert(verts.end(),{1,0});
+		verts.insert(verts.end(),{0,0,((size.x<0)!=(size.y<0)?-1.0f:1.0f)});
+	}
+	Bloc<float> bverts{verts.data(), verts.size()};
+	std::vector<uint> attribute_widths{3,2,3}; // vertex, UV, normal
+	Bloc<uint> widths{attribute_widths.data(), attribute_widths.size()};
+	return create(bverts,widths);
+}
 
 
 

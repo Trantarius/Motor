@@ -1,6 +1,7 @@
 #pragma once
 #include "Spatial.hpp"
 #include "util/strings.hpp"
+#include "Object.hpp"
 
 struct Light : public Spatial{
 	/*
@@ -24,3 +25,8 @@ struct Light : public Spatial{
 };
 
 STRUCT_TO_STRING(Light,type,lumin,spread,color,plane_size,transform);
+
+struct PointLight : public Object {
+	dvec3 position;
+
+};

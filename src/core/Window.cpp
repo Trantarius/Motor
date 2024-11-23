@@ -41,10 +41,12 @@ Window::Window(){
 		window = glfwCreateWindow(1024,600,"Hello",NULL,NULL);
 	assert(window);
 	glfwSetFramebufferSizeCallback(window,Window::framebufferResizeCallback);
+	window_obj_from_glfw.emplace(window, this);
 }
 
 Window::~Window(){
 	glfwDestroyWindow(window);
+	window_obj_from_glfw.erase(window);
 }
 
 void Window::render(){

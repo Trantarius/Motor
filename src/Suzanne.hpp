@@ -10,10 +10,10 @@ public:
 
 	Suzanne() {
 		mesh = std::shared_ptr<Mesh>(Mesh::readOBJ("assets/suzanne.obj"));
-		shader = std::make_shared<Shader>("/mesh.v.glsl","/vertex.f.glsl");
-		Engine::main_window->viewport->render_cycle[Viewport::UNLIT].add(CALLBACK(*this,MeshObject::render));
+		shader = std::make_shared<Shader>("/mesh.v.glsl","/material.f.glsl");
+		Engine::main_window->viewport->render_cycle[Viewport::NORMAL].add(CALLBACK(*this,MeshObject::render));
 	}
 	~Suzanne(){
-		Engine::main_window->viewport->render_cycle[Viewport::UNLIT].remove(CALLBACK(*this,MeshObject::render));
+		Engine::main_window->viewport->render_cycle[Viewport::NORMAL].remove(CALLBACK(*this,MeshObject::render));
 	}
 };

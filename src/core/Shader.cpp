@@ -196,6 +196,17 @@ SET_UNIFORM(ivec4,int,4i,GL_INT_VEC4)
 
 #undef SET_UNIFORM
 
+void Shader::setUniform(const std::string& name,bool val){
+	GLint ival = val?1:0;
+	assert(*this);
+	assert(hasUniform(name));
+	Uniform& unif = uniforms[name];
+	assert(unif.type==GL_BOOL);
+	assert(unif.size==1);
+	glProgramUniform1iv(id,unif.location,1,&ival);
+	checkGLError();
+}
+
 #define SET_UNIFORM_MATRIX(utype,ptype,letter,gltype)\
 void Shader::setUniform(const std::string& name,utype val){\
 	assert(*this);\
@@ -249,4 +260,67 @@ void Shader::setUniformTexture(const std::string& name, GLuint val){
 #endif
 	glBindTextureUnit(unif.unit, val);
 	checkGLError();
+}
+
+
+void Shader::setUniformValue(const std::string& name, const UniformValue& val){
+	switch(val.type){
+		case GL_INT         :
+			setUniform(name, val.int_v   );
+			break;
+		case GL_INT_VEC2    :
+			setUniform(name, val.ivec2_v );
+			break;
+		case GL_INT_VEC3    :
+			setUniform(name, val.ivec3_v );
+			break;
+		case GL_INT_VEC4    :
+			setUniform(name, val.ivec4_v );
+			break;
+		case GL_FLOAT       :
+			setUniform(name, val.float_v );
+			break;
+		case GL_FLOAT_VEC2  :
+			setUniform(name, val.fvec2_v );
+			break;
+		case GL_FLOAT_VEC3  :
+			setUniform(name, val.fvec3_v );
+			break;
+		case GL_FLOAT_VEC4  :
+			setUniform(name, val.fvec4_v );
+			break;
+		case GL_DOUBLE      :
+			setUniform(name, val.double_v);
+			break;
+		case GL_DOUBLE_VEC2 :
+			setUniform(name, val.dvec2_v );
+			break;
+		case GL_DOUBLE_VEC3 :
+			setUniform(name, val.dvec3_v );
+			break;
+		case GL_DOUBLE_VEC4 :
+			setUniform(name, val.dvec4_v );
+			break;
+		case GL_FLOAT_MAT2  :
+			setUniform(name, val.fmat2_v );
+			break;
+		case GL_FLOAT_MAT3  :
+			setUniform(name, val.fmat3_v );
+			break;
+		case GL_FLOAT_MAT4  :
+			setUniform(name, val.fmat4_v );
+			break;
+		case GL_DOUBLE_MAT2 :
+			setUniform(name, val.dmat2_v );
+			break;
+		case GL_DOUBLE_MAT3 :
+			setUniform(name, val.dmat3_v );
+			break;
+		case GL_DOUBLE_MAT4 :
+			setUniform(name, val.dmat4_v );
+			break;
+		case GL_SAMPLER     :
+			setUniformTexture(name, val.tex_v);
+			break;
+	}
 }
